@@ -1,0 +1,21 @@
+@model IEnumerable<FoodHub.Models.FoodItem>
+
+<h2>Food Menu</h2>
+
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+    </tr>
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Description</td>
+            <td>@item.Price</td>
+        </tr>
+    }
+</table>
+
+<a href="/Food/Create" class="btn btn-primary">Add Food Item</a>
