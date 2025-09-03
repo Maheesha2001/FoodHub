@@ -2,7 +2,141 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<header class="hero-section position-relative text-center py-5 w-100" style="height: 100vh;">
+    <!-- Background image with reduced contrast -->
+    <div class="bg-img position-absolute top-0 start-0 w-100 h-100" 
+         style="background: url('/Content/images/heroImg.jpg') center/cover no-repeat; 
+                filter: contrast(50%); z-index: -1;"></div>
+
+    <!-- Text content stays on top, full width -->
+    <div class="position-relative text-light d-flex flex-column justify-content-center align-items-center h-100">
+        <h1 class="display-3 fw-bold">Delicious Food, Delivered Fast</h1>
+        <p class="lead">Order your favorite meals online and enjoy at home.</p>
+        <a href="#" class="btn btn-warning btn-lg mt-3">Order Now</a>
+    </div>
+</header>
+
+
+
+<!-- Specials -->
+<section  id="specials"  class="container-fluid py-5 bg-light">
+     <div class="text-center mb-5">
+        <h2 class="fw-bold">Our Specials</h2>
+    </div>
+      <div class="row g-4 px-5" id="specials-container">
+        <!-- Specials will be loaded dynamically -->
+    </div>
+     <!-- <div class="row g-4 px-5">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="./Content/images/pizzadeal.jpg" class="card-img-top" alt="Pizza">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pizza</h5>
+                    <p class="card-text">Freshly baked with premium toppings.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="./Content/images/burgerspecial.jpg" class="card-img-top" alt="Burger">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Burgers</h5>
+                    <p class="card-text">Juicy and flavorful, made to perfection.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <img src="./Content/images/pastaspecial.jpg" class="card-img-top" alt="Pasta">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Pasta</h5>
+                    <p class="card-text">Authentic recipes with creamy sauces.</p>
+                </div>
+            </div>
+        </div>
+    </div> -->
+</section>
+<script src="~/js/specials.js"></script>
+
+<!-- About -->
+<section id="about" class="container-fluid pb-5 bg-white">
+    <div class="row align-items-center px-5">
+        <!-- Image Left -->
+        <div class="col-md-6">
+            <div class="h-100" 
+                 style="background: url('/Content/images/aboutus.jpg') center/cover no-repeat; min-height: 100vh;">
+            </div>
+        </div>
+
+        <!-- Text Right -->
+        <div class="col-md-6">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">About Us</h2>
+            </div>
+            <h3 class="fw-bold">Why Choose FoodieExpress?</h3>
+            <p class="text-muted">
+                At <span class="fw-bold text-warning">FoodieExpress</span>, we are passionate about bringing your favorite meals right to your doorstep.  
+                From freshly baked pizzas to juicy burgers and authentic pasta, our mission is to deliver delicious food, fast and fresh.  
+            </p>
+            <ul class="list-unstyled text-muted">
+                <li>✅ Wide variety of dishes prepared with fresh ingredients</li>
+                <li>✅ Fast delivery service you can rely on</li>
+                <li>✅ Easy and secure online ordering experience</li>
+                <li>✅ Serving customers with love and care</li>
+            </ul>
+            <a href="#specials" class="btn btn-warning mt-3">Explore Specials</a>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Us -->
+<!-- Contact Us -->
+<section id="contactus" class="container-fluid d-flex align-items-center" style="min-height: 100vh; background-color: #dddddd; ">
+    <div class="row w-100 gx-5 justify-content-center">
+        <!-- Left Column: Contact Info + Social Links -->
+        <div class="col-md-5 d-flex flex-column justify-content-center mb-5 mb-md-0">
+            <h2 class="fw-bold mb-4 text-dark">Get in Touch</h2>
+            <p class="text-muted mb-4">
+                We’d love to hear from you! Send us a message or connect with us on social media.
+            </p>
+            <div class="d-flex gap-3 mb-4">
+                <a href="https://www.facebook.com" target="_blank" class="btn btn-outline-dark rounded-circle p-3">
+                    <i class="bi bi-facebook"></i>
+                </a>
+                <a href="https://www.instagram.com" target="_blank" class="btn btn-outline-dark rounded-circle p-3">
+                    <i class="bi bi-instagram"></i>
+                </a>
+                <a href="https://www.twitter.com" target="_blank" class="btn btn-outline-dark rounded-circle p-3">
+                    <i class="bi bi-twitter"></i>
+                </a>
+            </div>
+            <p class="text-dark">
+                <strong>Email:</strong> contact@foodieexpress.com <br>
+                <strong>Phone:</strong> +94 123 456 789
+            </p>
+        </div>
+
+        <!-- Right Column: Contact Form -->
+        <div class="col-md-5">
+            <div class="p-4 bg-white rounded shadow">
+                <form>
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-bold">Your Name</label>
+                        <input type="text" class="form-control" id="name" placeholder="Enter your name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-bold">Your Email</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter your email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label fw-bold">Message</label>
+                        <textarea class="form-control" id="message" rows="5" placeholder="Write your message"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+

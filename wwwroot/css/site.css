@@ -17,9 +17,7 @@ html {
   min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
-}
+
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
@@ -29,3 +27,56 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+#backToTop {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    display: block;           /* always take up space */
+    opacity: 0;               /* start hidden */
+    pointer-events: none;     /* not clickable when hidden */
+    transition: opacity 0.3s ease;
+}
+
+#backToTop.show {
+    opacity: 1;               /* visible when scrolled */
+    pointer-events: auto;     /* clickable */
+}
+
+#backToTop:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+footer.custom-footer {
+    text-align: center;
+    padding: 1em 0;
+    background: #000000;
+    color: #fff;
+    width: 100%;
+}
+
+
+ .dashboard-card {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background-color: #1a1a1a; /* dark background */
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        background-color: #292929; /* slightly lighter on hover */
+    }
+
+    .dashboard-card h5 {
+        margin: 0;
+        font-weight: 600;
+    }

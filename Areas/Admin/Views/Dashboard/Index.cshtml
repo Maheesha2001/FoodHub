@@ -1,0 +1,133 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="d-flex">
+
+    <!-- Sidebar -->
+    <div class="bg-dark text-white p-3" style="width: 220px; min-height: 100vh;">
+        <ul class="nav flex-column mt-4">
+      <li class="nav-item mt-3">
+        <a href="/Admin/Dashboard" class="nav-link text-white">
+            <strong>Dashboard</strong>
+        </a>
+    </li>
+         <li class="nav-item mt-3"><strong style="color: #FFC107;">Specials</strong></li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=ViewSpecials" class="nav-link text-white">View Specials</a>
+            </li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=AddSpecial" class="nav-link text-white">Add Specials</a>
+            </li>
+            <li class="nav-item mt-3"><strong style="color: #FFC107;">Pizza</strong></li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=ViewPizza" class="nav-link text-white">View Pizza</a>
+            </li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=AddPizza" class="nav-link text-white">Add Pizza</a>
+            </li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=AddPizzaCategory" class="nav-link text-white">Add Pizza Category</a>
+            </li>
+            <li class="nav-item mt-3"><strong style="color: #FFC107;">Beverages</strong></li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=ViewBeverages" class="nav-link text-white">View Beverages</a>
+            </li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=AddBeverage" class="nav-link text-white">Add Beverage</a>
+            </li>
+            <li class="nav-item mt-2">
+                <a href="/Admin/Dashboard?page=AddBeverageCategory" class="nav-link text-white">Add Beverage Category</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-4">
+        
+        @if (ViewData["Page"]?.ToString() == "ViewSpecials")
+        {
+            var specials = ViewData["Specials"] as IEnumerable<FoodHub.Models.Special>;
+            @await Html.PartialAsync("_ViewSpecials", specials)
+        }
+        else if (ViewData["Page"]?.ToString() == "AddSpecial")
+        {
+            @await Html.PartialAsync("_AddSpecial")
+        }
+        else
+        {
+            <!-- Default cards overview -->
+            <h3 class="text-warning mb-3">Dashboard Overview</h3>
+           <div class="row g-4">
+    <!-- Row 1 -->
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=ViewSpecials" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>View Specials</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=AddSpecial" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>Add Specials</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=ViewPizza" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>View Pizza</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=AddPizza" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>Add Pizza</h5>
+            </div>
+        </a>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=AddPizzaCategory" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>Add Pizza Category</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=ViewBeverages" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>View Beverages</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=AddBeverage" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>Add Beverage</h5>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="/Admin/Dashboard?page=AddBeverageCategory" class="text-decoration-none">
+            <div class="card dashboard-card text-center p-4">
+                <h5>Add Beverage Category</h5>
+            </div>
+        </a>
+    </div>
+</div>
+
+        }
+    </div>
+
+</div>

@@ -10,5 +10,6 @@ namespace FoodHub.Data
         public DbSet<FoodItem> FoodItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Special> Specials { get; set; }
     }
 }

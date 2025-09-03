@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <!-- Admin Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+              <a class="navbar-brand fw-bold text-warning" asp-controller="Home" asp-action="Index">FoodieExpress</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Settings">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content">
+        @RenderBody()
+    </div>
+
+    <footer class="bg-dark text-light text-center py-3">
+        <p class="mb-0">&copy; @DateTime.Now.Year - Admin Panel</p>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
