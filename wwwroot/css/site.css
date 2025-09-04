@@ -57,6 +57,24 @@ footer.custom-footer {
     width: 100%;
 }
 
+.card-img-top {
+    width: 100%;       /* makes it full card width */
+    height: 200px;     /* fixed height for all images */
+    object-fit: cover; /* crops/resizes the image to fill without distortion */
+}
+
+.pizza-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.pizza-card:hover {
+    transform: translateY(-10px); /* lifts the card */
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2); /* stronger shadow */
+}
+
+
+/* ADMIN */
+
 
  .dashboard-card {
         height: 150px;

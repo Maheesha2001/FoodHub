@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 specialsContainer.innerHTML += `
                     <div class="col-md-4">
                         <div class="card shadow-sm border-0 h-100">
-                            <img src="/Content/images/${item.imageName}" class="card-img-top" alt="${item.title}">
+                             <img src="/uploads/specials/${item.imageName}" class="card-img-top" alt="${item.title}" />
                             <div class="card-body text-center">
                                 <h5 class="card-title">${item.title}</h5>
                                 <p class="card-text">${item.description}</p>

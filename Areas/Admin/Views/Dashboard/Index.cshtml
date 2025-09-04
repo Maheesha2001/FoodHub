@@ -18,7 +18,7 @@
                 <a href="/Admin/Dashboard?page=ViewSpecials" class="nav-link text-white">View Specials</a>
             </li>
             <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddSpecial" class="nav-link text-white">Add Specials</a>
+                <a href="/Admin/Dashboard?page=AddSpecials" class="nav-link text-white">Add Specials</a>
             </li>
             <li class="nav-item mt-3"><strong style="color: #FFC107;">Pizza</strong></li>
             <li class="nav-item mt-2">
@@ -51,10 +51,11 @@
             var specials = ViewData["Specials"] as IEnumerable<FoodHub.Models.Special>;
             @await Html.PartialAsync("_ViewSpecials", specials)
         }
-        else if (ViewData["Page"]?.ToString() == "AddSpecial")
+        else if (ViewData["Page"]?.ToString() == "AddSpecials")
         {
-            @await Html.PartialAsync("_AddSpecial")
+            @await Html.PartialAsync("_AddSpecials", new FoodHub.Models.Special())
         }
+
         else
         {
             <!-- Default cards overview -->
@@ -70,7 +71,7 @@
     </div>
 
     <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddSpecial" class="text-decoration-none">
+        <a href="/Admin/Dashboard?page=AddSpecials" class="text-decoration-none">
             <div class="card dashboard-card text-center p-4">
                 <h5>Add Specials</h5>
             </div>

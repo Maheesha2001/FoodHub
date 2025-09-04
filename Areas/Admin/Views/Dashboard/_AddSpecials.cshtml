@@ -1,0 +1,31 @@
+@model FoodHub.Models.Special
+
+<h2 class="text-warning mb-3">Add Special</h2>
+
+<form method="post" enctype="multipart/form-data" action="/Admin/Specials/Create">
+
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label fw-bold">Title</label>
+        <input asp-for="Title" class="form-control" placeholder="Enter special title" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label fw-bold">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Enter description"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Image</label>
+        <input type="file" name="ImageFile" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Add Special</button>
+    <a href="/Admin/Dashboard?page=ViewSpecials" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

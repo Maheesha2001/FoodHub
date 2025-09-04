@@ -1,0 +1,19 @@
+@model IEnumerable<FoodHub.Models.Pizza>
+
+<h2 class="text-center mb-4">Our Pizzas</h2>
+<div class="row g-4">
+@foreach (var pizza in Model)
+{
+    <div class="col-md-3 mb-4">
+    <div class="card pizza-card shadow-sm border-0 text-center">
+           <img src="~/uploads/pizzas/@pizza.ImageName" class="card-img-top" alt="@pizza.Name" style="height:250px; object-fit:cover;">
+       <div class="card-body text-center">
+                <h5 class="card-title">@pizza.Name</h5>
+                <p class="card-text">@pizza.Description</p>
+                <p class="fw-bold">$@pizza.Price</p>
+            </div>
+    </div>
+</div>
+
+}
+</div>
