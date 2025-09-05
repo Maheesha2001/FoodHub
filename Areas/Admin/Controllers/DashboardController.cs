@@ -24,6 +24,16 @@ namespace FoodHub.Areas.Admin.Controllers
                 var specials = await _context.Specials.ToListAsync();
                 ViewData["Specials"] = specials;
             }
+            else if (page == "ViewPizza")
+            {
+                var pizzas = _context.Pizzas.ToList();
+                ViewData["Pizzas"] = pizzas;
+            }
+            else if (page == "ViewBeverages")
+            {
+                var beverages = _context.Beverages.ToList();
+                ViewData["Beverages"] = beverages;
+            }
 
             return View();
         }

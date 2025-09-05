@@ -1,0 +1,33 @@
+@model IEnumerable<FoodHub.Models.Beverage>
+
+<div class="container py-5">
+    <h2 class="text-center mb-4">Our Beverages</h2>
+    <div class="row">
+        @foreach (var beverage in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0 h-100 text-center beverage-card">
+                    <img src="~/uploads/beverages/@beverage.ImageName" 
+                         class="card-img-top" 
+                         alt="@beverage.Name" 
+                         style="height:200px; object-fit:cover;" />
+                    <div class="card-body">
+                        <h5 class="card-title">@beverage.Name</h5>
+                        <p class="card-text">@beverage.Description</p>
+                        <p class="fw-bold">$@beverage.Price</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .beverage-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .beverage-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    }
+</style>
