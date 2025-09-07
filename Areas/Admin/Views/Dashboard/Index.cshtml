@@ -27,7 +27,10 @@
                 <a href="/Admin/Dashboard?page=ViewPizza" class="nav-link text-white">View Pizza</a>
             </li>
             <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddPizza" class="nav-link text-white">Add Pizza</a>
+                <a href="/Admin/Dashboard?page=AddPizzas" class="nav-link text-white">Add Pizza</a>
+            </li>
+             <li class="nav-item mt-2"></li>
+                <a href="/Admin/Dashboard?page=ViewPizzaCategory" class="nav-link text-white">View Pizza Category</a>
             </li>
             <li class="nav-item mt-2">
                 <a href="/Admin/Dashboard?page=AddPizzaCategory" class="nav-link text-white">Add Pizza Category</a>
@@ -40,9 +43,7 @@
             <li class="nav-item mt-2">
                 <a href="/Admin/Dashboard?page=AddBeverage" class="nav-link text-white">Add Beverage</a>
             </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddBeverageCategory" class="nav-link text-white">Add Beverage Category</a>
-            </li>
+
         </ul>
     </div>
 
@@ -66,9 +67,19 @@
                 @await Html.PartialAsync("_ViewPizzas", pizzas)
                 break;
 
-            case "AddPizza":
-                @await Html.PartialAsync("_AddPizza", new FoodHub.Models.Pizza())
+            case "AddPizzas":
+                @await Html.PartialAsync("_AddPizzas", new FoodHub.Models.Pizza())
                 break;
+
+            case "ViewPizzaCategory":
+                var pizzaCategories = ViewData["PizzaCategories"] as IEnumerable<FoodHub.Models.PizzaCrustCategory>;
+                @await Html.PartialAsync("_ViewPizzaCategory", pizzaCategories)
+                break;
+
+            case "AddPizzaCategory":
+                @await Html.PartialAsync("_AddPizzaCategory", new FoodHub.Models.PizzaCrustCategory())
+                break;
+
 
             case "ViewBeverages":
                 var beverages = ViewData["Beverages"] as IEnumerable<FoodHub.Models.Beverage>;
@@ -76,7 +87,7 @@
                 break;
 
             case "AddBeverage":
-                @await Html.PartialAsync("_AddBeverage", new FoodHub.Models.Beverage())
+                @await Html.PartialAsync("_AddBeverages", new FoodHub.Models.Beverage())
                 break;
 
             default:
@@ -104,9 +115,16 @@
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="/Admin/Dashboard?page=AddPizza" class="text-decoration-none">
+                        <a href="/Admin/Dashboard?page=AddPizzas" class="text-decoration-none">
                             <div class="card dashboard-card text-center p-4">
                                 <h5>Add Pizza</h5>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/Admin/Dashboard?page=ViewPizzaCategory" class="text-decoration-none">
+                            <div class="card dashboard-card text-center p-4">
+                                <h5>View Pizza Category</h5>
                             </div>
                         </a>
                     </div>
@@ -131,13 +149,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
-                        <a href="/Admin/Dashboard?page=AddBeverageCategory" class="text-decoration-none">
-                            <div class="card dashboard-card text-center p-4">
-                                <h5>Add Beverage Category</h5>
-                            </div>
-                        </a>
-                    </div>
+                  
                 </div>
                 break;
         }

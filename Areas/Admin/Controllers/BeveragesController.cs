@@ -25,37 +25,39 @@ namespace FoodHub.Areas.Admin.Controllers
         }
 
         // GET: Admin/Beverages/Create
-        public IActionResult Create() => View();
+        public IActionResult Create() => 
+    View("~/Areas/Admin/Views/Dashboard/_AddBeverages.cshtml", new Beverage());
 
         // POST: Admin/Beverages/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Beverage beverage, IFormFile ImageFile)
-        {
-            if (ModelState.IsValid)
-            {
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    var fileName = Path.GetFileName(ImageFile.FileName);
-                    var uploads = Path.Combine(_env.WebRootPath, "uploads/beverages");
-                    if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+       // POST: Admin/Beverages/Create
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
+{
+    if (!ModelState.IsValid)
+    {
+        return View("~/Areas/Admin/Dashboard", beverage);
+    }
 
-                    var filePath = Path.Combine(uploads, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(stream);
-                    }
-                    beverage.ImageName = fileName;
-                }
+    if (ImageFile != null && ImageFile.Length > 0)
+    {
+        var fileName = Path.GetFileName(ImageFile.FileName);
+        var uploads = Path.Combine(_env.WebRootPath, "uploads/beverages");
+        if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
 
-                beverage.CreatedAt = DateTime.Now;
-                _context.Add(beverage);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(beverage);
-        }
+        var filePath = Path.Combine(uploads, fileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await ImageFile.CopyToAsync(stream);
 
+        beverage.ImageName = fileName;
+    }
+
+    beverage.CreatedAt = DateTime.Now;
+    _context.Beverages.Add(beverage);
+    await _context.SaveChangesAsync();
+
+ return Redirect("/Admin/Dashboard?page=ViewBeverages");
+}
         // GET: Admin/Beverages/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -98,9 +100,9 @@ namespace FoodHub.Areas.Admin.Controllers
                     if (!_context.Beverages.Any(e => e.Id == beverage.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
+                  return Redirect("/Admin/Dashboard?page=ViewBeverages");
             }
-            return View(beverage);
+              return Redirect("/Admin/Dashboard?page=ViewBeverages");
         }
 
         // GET: Admin/Beverages/Delete/5

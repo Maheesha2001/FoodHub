@@ -1,0 +1,14 @@
+@model FoodHub.Models.PizzaCrustCategory
+
+<h3 class="text-warning mb-3">Add Pizza Crust Category</h3>
+
+<form asp-action="AddCrustCategory" asp-controller="Pizzas" asp-area="Admin" method="post">
+    <div class="form-group mb-3">
+        <label asp-for="CategoryName" class="form-label">Category Name</label>
+        <input asp-for="CategoryName" class="form-control" placeholder="Enter crust category name" />
+        <span asp-validation-for="CategoryName" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save Category</button>
+    <a asp-area="Admin" asp-controller="Pizzas" asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
