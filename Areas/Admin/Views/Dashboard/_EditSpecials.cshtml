@@ -1,0 +1,51 @@
+@model FoodHub.Models.Special
+
+<div class="card shadow-sm mb-4" style="max-width: 600px; margin:auto;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Edit Special</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" asp-controller="Specials" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-bold"></label>
+                <input asp-for="Title" class="form-control form-control-lg" placeholder="Enter title" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-bold"></label>
+                <textarea asp-for="Description" class="form-control form-control-lg" rows="4" placeholder="Enter description"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3 text-center">
+                <label class="form-label fw-bold">Current Image</label><br />
+                @if (!string.IsNullOrEmpty(Model.ImageName))
+                {
+                    <img src="~/uploads/specials/@Model.ImageName" alt="Special Image" 
+                         class="img-thumbnail" style="max-width: 250px; height:auto;" />
+                }
+                else
+                {
+                    <div class="text-muted">No image uploaded</div>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Upload New Image</label>
+                <input type="file" name="ImageFile" class="form-control" />
+                <span asp-validation-for="ImageName" class="text-danger small"></span>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg">Update Special</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

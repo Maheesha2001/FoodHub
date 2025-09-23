@@ -1,0 +1,73 @@
+@model FoodHub.Models.Pizza
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<div class="card shadow-sm mb-4" style="max-width: 700px; margin:auto;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Edit Pizza</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" asp-controller="Pizzas" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Pizza Name -->
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label fw-bold"></label>
+                <input asp-for="Name" class="form-control form-control-lg" placeholder="Enter pizza name" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-bold"></label>
+                <textarea asp-for="Description" class="form-control form-control-lg" rows="3" placeholder="Enter description"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+
+            <!-- Price -->
+            <div class="mb-3">
+                <label asp-for="Price" class="form-label fw-bold"></label>
+                <input asp-for="Price" class="form-control form-control-lg" placeholder="Enter price" />
+                <span asp-validation-for="Price" class="text-danger small"></span>
+            </div>
+
+            <!-- Crust Category Dropdown -->
+           <div class="mb-3">
+                <label asp-for="CrustCategory" class="form-label fw-bold"></label>
+                <select asp-for="CrustCategory" class="form-control" asp-items="ViewBag.CrustCategories">
+                    <option value="">-- Select Crust --</option>
+                </select>
+                <span asp-validation-for="CrustCategory" class="text-danger"></span>
+            </div>
+
+            <!-- Current Image -->
+            <div class="mb-3 text-center">
+                <label class="form-label fw-bold">Current Image</label><br />
+                @if (!string.IsNullOrEmpty(Model.ImageName))
+                {
+                    <img src="~/uploads/pizzas/@Model.ImageName" alt="@Model.Name"
+                         class="img-thumbnail" style="max-width: 250px; height:auto;" />
+                }
+                else
+                {
+                    <div class="text-muted">No image uploaded</div>
+                }
+            </div>
+
+            <!-- Upload New Image -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Upload New Image</label>
+                <input type="file" name="ImageFile" class="form-control" />
+                <span asp-validation-for="ImageName" class="text-danger small"></span>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg">Update Pizza</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

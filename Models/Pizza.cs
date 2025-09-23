@@ -7,7 +7,7 @@ namespace FoodHub.Models
         public string Description { get; set; }
         public string? ImageName { get; set; }
         public decimal Price { get; set; }
-        public string CrustCategory { get; set; }
+        public string? CrustCategory { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

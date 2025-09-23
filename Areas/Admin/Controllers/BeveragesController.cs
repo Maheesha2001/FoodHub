@@ -29,44 +29,44 @@ namespace FoodHub.Areas.Admin.Controllers
     View("~/Areas/Admin/Views/Dashboard/_AddBeverages.cshtml", new Beverage());
 
         // POST: Admin/Beverages/Create
-       // POST: Admin/Beverages/Create
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
-{
-    if (!ModelState.IsValid)
-    {
-        return View("~/Areas/Admin/Dashboard", beverage);
-    }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("~/Areas/Admin/Dashboard", beverage);
+            }
 
-    if (ImageFile != null && ImageFile.Length > 0)
-    {
-        var fileName = Path.GetFileName(ImageFile.FileName);
-        var uploads = Path.Combine(_env.WebRootPath, "uploads/beverages");
-        if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                var fileName = Path.GetFileName(ImageFile.FileName);
+                var uploads = Path.Combine(_env.WebRootPath, "uploads/beverages");
+                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
 
-        var filePath = Path.Combine(uploads, fileName);
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await ImageFile.CopyToAsync(stream);
+                var filePath = Path.Combine(uploads, fileName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await ImageFile.CopyToAsync(stream);
 
-        beverage.ImageName = fileName;
-    }
+                beverage.ImageName = fileName;
+            }
 
-    beverage.CreatedAt = DateTime.Now;
-    _context.Beverages.Add(beverage);
-    await _context.SaveChangesAsync();
+            beverage.CreatedAt = DateTime.Now;
+            _context.Beverages.Add(beverage);
+            await _context.SaveChangesAsync();
 
- return Redirect("/Admin/Dashboard?page=ViewBeverages");
-}
+        return Redirect("/Admin/Dashboard?page=ViewBeverages");
+        }
         // GET: Admin/Beverages/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
             var beverage = await _context.Beverages.FindAsync(id);
             if (beverage == null) return NotFound();
-            return View(beverage);
-        }
+          return View("~/Areas/Admin/Views/Dashboard/_EditBeverages.cshtml", beverage);
 
+
+        }
         // POST: Admin/Beverages/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -78,6 +78,11 @@ public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
             {
                 try
                 {
+                    // Get existing beverage from DB
+                    var existingBeverage = await _context.Beverages.AsNoTracking()
+                                                                .FirstOrDefaultAsync(b => b.Id == id);
+                    if (existingBeverage == null) return NotFound();
+
                     if (ImageFile != null && ImageFile.Length > 0)
                     {
                         var fileName = Path.GetFileName(ImageFile.FileName);
@@ -89,7 +94,12 @@ public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
                         {
                             await ImageFile.CopyToAsync(stream);
                         }
-                        beverage.ImageName = fileName;
+                        beverage.ImageName = fileName; // set new image
+                    }
+                    else
+                    {
+                        // Keep existing image
+                        beverage.ImageName = existingBeverage.ImageName;
                     }
 
                     _context.Update(beverage);
@@ -100,10 +110,13 @@ public async Task<IActionResult> Create(Beverage beverage, IFormFile? ImageFile)
                     if (!_context.Beverages.Any(e => e.Id == beverage.Id)) return NotFound();
                     else throw;
                 }
-                  return Redirect("/Admin/Dashboard?page=ViewBeverages");
+
+                return Redirect("/Admin/Dashboard?page=ViewBeverages");
             }
-              return Redirect("/Admin/Dashboard?page=ViewBeverages");
+
+            return Redirect("/Admin/Dashboard?page=ViewBeverages");
         }
+
 
         // GET: Admin/Beverages/Delete/5
         public async Task<IActionResult> Delete(int? id)

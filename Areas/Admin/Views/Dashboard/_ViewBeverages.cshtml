@@ -32,7 +32,7 @@ else
                     <td>$@bev.Price</td>
                     <td>@bev.CreatedAt.ToString("yyyy-MM-dd")</td>
                     <td>
-                        <a class="btn btn-sm btn-primary" asp-area="Admin" asp-controller="Beverages" asp-action="Edit" asp-route-id="@bev.Id">Edit</a>
+                        <a class="btn btn-sm btn-primary" href="/Admin/Dashboard?page=EditBeverages&id=@bev.Id">Edit</a>
                         <a class="btn btn-sm btn-danger" asp-area="Admin" asp-controller="Beverages" asp-action="Delete" asp-route-id="@bev.Id">Delete</a>
                     </td>
                 </tr>

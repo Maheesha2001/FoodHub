@@ -1,0 +1,19 @@
+@model FoodHub.Models.PizzaCrustCategory
+
+<h2>Edit Pizza Crust Category</h2>
+
+<form asp-action="EditCrustCategory" asp-controller="Pizzas" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="CategoryName" class="form-label"></label>
+        <input asp-for="CategoryName" class="form-control" />
+        <span asp-validation-for="CategoryName" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Category</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

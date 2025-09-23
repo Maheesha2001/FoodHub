@@ -44,7 +44,8 @@ app.MapGet("/Admin", context =>
 // Area route (must come first)
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
+  //  pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}"
 );
 
 // Default route

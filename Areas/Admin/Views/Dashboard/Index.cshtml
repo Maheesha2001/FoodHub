@@ -90,6 +90,26 @@
                 @await Html.PartialAsync("_AddBeverages", new FoodHub.Models.Beverage())
                 break;
 
+            case "EditSpecials":
+                var special = ViewData.Model as FoodHub.Models.Special ?? ViewData["Special"] as FoodHub.Models.Special;
+                @await Html.PartialAsync("_EditSpecials", special)
+                break;
+
+            case "EditPizzas":
+                var pizza = ViewData.Model as FoodHub.Models.Pizza ?? ViewData["Pizza"] as FoodHub.Models.Pizza;
+                @await Html.PartialAsync("_EditPizzas", pizza)
+                break;
+
+            case "EditBeverages":
+                var beverage = ViewData.Model as FoodHub.Models.Beverage ?? ViewData["Beverage"] as FoodHub.Models.Beverage;
+                @await Html.PartialAsync("_EditBeverages", beverage)
+                break;
+
+            case "EditPizzaCategory":
+                var pizzaCategory = ViewData.Model as FoodHub.Models.PizzaCrustCategory ?? ViewData["PizzaCategory"] as FoodHub.Models.PizzaCrustCategory;
+                @await Html.PartialAsync("_EditPizzaCategory", pizzaCategory)
+                break;
+            
             default:
                 <h3 class="text-warning mb-3">Dashboard Overview</h3>
                 <div class="row g-4">
