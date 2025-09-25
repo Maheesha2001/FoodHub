@@ -1,6 +1,6 @@
 @model IEnumerable<FoodHub.Models.PizzaCrustCategory>
 
-<h3 class="text-warning mb-3">Pizza Categories</h3>
+<h3 class="text-warning mb-3">Pizza Crusts</h3>
 
 @if (Model != null && Model.Any())
 {
@@ -8,6 +8,8 @@
         <thead>
             <tr>
                 <th>Category Name</th>
+                <th>Extra Charge</th>
+                <th>Percentage Increase</th>
                 <th>Created At</th>
                 <th style="width:150px;">Actions</th>
             </tr>
@@ -17,6 +19,8 @@
         {
             <tr>
                 <td>@cat.CategoryName</td>
+                <th>@cat.ExtraCharge</th>
+                <th>@cat.PercentageIncrease</th>
                 <td>@cat.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                 <td>
                    <a class="btn btn-sm btn-primary" href="/Admin/Dashboard?page=EditPizzaCategory&id=@cat.Id">Edit</a>

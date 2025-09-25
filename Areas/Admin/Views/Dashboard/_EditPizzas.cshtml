@@ -25,19 +25,36 @@
 
             <!-- Price -->
             <div class="mb-3">
-                <label asp-for="Price" class="form-label fw-bold"></label>
-                <input asp-for="Price" class="form-control form-control-lg" placeholder="Enter price" />
-                <span asp-validation-for="Price" class="text-danger small"></span>
+                <label asp-for="BasePrice" class="form-label fw-bold"></label>
+                <input asp-for="BasePrice" class="form-control form-control-lg" placeholder="Enter price" />
+                <span asp-validation-for="BasePrice" class="text-danger small"></span>
             </div>
 
+            @{ int i = 0; }
+@foreach (var price in Model.PizzaPrices)
+{
+    <tr>
+        <td>
+            @price.Crust.CategoryName
+            <input type="hidden" name="PizzaPrices[@i].Id" value="@price.Id" />
+            <input type="hidden" name="PizzaPrices[@i].CrustId" value="@price.CrustId" />
+        </td>
+        <td>
+            <input name="PizzaPrices[@i].Price" value="@price.Price" class="form-control" />
+        </td>
+    </tr>
+    i++;
+}
+
+
             <!-- Crust Category Dropdown -->
-           <div class="mb-3">
+           @* <div class="mb-3">
                 <label asp-for="CrustCategory" class="form-label fw-bold"></label>
                 <select asp-for="CrustCategory" class="form-control" asp-items="ViewBag.CrustCategories">
                     <option value="">-- Select Crust --</option>
                 </select>
                 <span asp-validation-for="CrustCategory" class="text-danger"></span>
-            </div>
+            </div> *@
 
             <!-- Current Image -->
             <div class="mb-3 text-center">

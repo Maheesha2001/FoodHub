@@ -11,6 +11,7 @@ namespace FoodHub.Areas.Admin.Controllers
     {
         private readonly FoodHubContext _context;
         private readonly IWebHostEnvironment _env;
+        
 
         public PizzasController(FoodHubContext context, IWebHostEnvironment env)
         {
@@ -27,37 +28,40 @@ namespace FoodHub.Areas.Admin.Controllers
         // GET: Admin/Pizzas
         public async Task<IActionResult> Index()
         {
-            var pizzas = await _context.Pizzas.ToListAsync();
-            var crusts = await _context.PizzaCrustCategory.ToListAsync();
+            var pizzas = await _context.Pizzas
+             .Include(p => p.PizzaPrices)
+        .ThenInclude(pp => pp.Crust)
+        .ToListAsync();
+         //   var crusts = await _context.PizzaCrustCategory.ToListAsync();
 
             // Create a dictionary to map pizza.Id => CategoryName
-            var pizzaCrustMap = new Dictionary<int, string>();
+            // var pizzaCrustMap = new Dictionary<int, string>();
 
-            foreach (var pizza in pizzas)
-            {
-                string crustName = "N/A";
+            // foreach (var pizza in pizzas)
+            // {
+            //     string crustName = "N/A";
 
-                if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
-                {
-                    // Try to match by ID
-                    var crust = crusts.FirstOrDefault(c =>
-                        string.Equals(c.Id.ToString(), pizza.CrustCategory.Trim(), StringComparison.OrdinalIgnoreCase));
+            //     if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
+            //     {
+            //         // Try to match by ID
+            //         var crust = crusts.FirstOrDefault(c =>
+            //             string.Equals(c.Id.ToString(), pizza.CrustCategory.Trim(), StringComparison.OrdinalIgnoreCase));
 
-                    // If not found by ID, try by name (in case old data stored name)
-                    if (crust == null)
-                    {
-                        crust = crusts.FirstOrDefault(c =>
-                            string.Equals(c.CategoryName, pizza.CrustCategory.Trim(), StringComparison.OrdinalIgnoreCase));
-                    }
+            //         // If not found by ID, try by name (in case old data stored name)
+            //         if (crust == null)
+            //         {
+            //             crust = crusts.FirstOrDefault(c =>
+            //                 string.Equals(c.CategoryName, pizza.CrustCategory.Trim(), StringComparison.OrdinalIgnoreCase));
+            //         }
 
-                    crustName = crust?.CategoryName ?? "N/A";
-                }
+            //         crustName = crust?.CategoryName ?? "N/A";
+            //     }
 
-                pizzaCrustMap[pizza.Id] = crustName;
-            }
+               // pizzaCrustMap[pizza.Id] = crustName;
+           // }
 
             // Pass dictionary to view
-            ViewBag.PizzaCrustMap = pizzaCrustMap;
+          //  ViewBag.PizzaCrustMap = pizzaCrustMap;
 
             return PartialView("~/Areas/Admin/Views/Dashboard/_ViewPizzas.cshtml", pizzas);
         }
@@ -68,18 +72,18 @@ namespace FoodHub.Areas.Admin.Controllers
         {
             var pizzas = await _context.Pizzas.ToListAsync();
             // Get all crust categories
-            var crusts = await _context.PizzaCrustCategory.ToListAsync();
+          //  var crusts = await _context.PizzaCrustCategory.ToListAsync();
             // Map crust names to pizzas
-            var pizzaWithCrust = pizzas.Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Description,
-                p.ImageName,
-                CrustName = crusts.FirstOrDefault(c => c.Id == int.Parse(p.CrustCategory))?.CategoryName ?? "N/A",
-                p.Price,
-                p.CreatedAt
-            }).ToList();
+            // var pizzaWithCrust = pizzas.Select(p => new
+            // {
+            //     p.Id,
+            //     p.Name,
+            //     p.Description,
+            //     p.ImageName,
+            //     CrustName = crusts.FirstOrDefault(c => c.Id == int.Parse(p.CrustCategory))?.CategoryName ?? "N/A",
+            //     p.BasePrice,
+            //     p.CreatedAt
+            // }).ToList();
             return PartialView("_ViewPizzas", pizzas); // partial for dashboard
         }
 
@@ -118,13 +122,13 @@ namespace FoodHub.Areas.Admin.Controllers
             }
 
             // Ensure a valid crust is selected
-            if (string.IsNullOrEmpty(pizza.CrustCategory) || !int.TryParse(pizza.CrustCategory, out _))
-            {
-                ModelState.AddModelError("CrustCategory", "Please select a valid crust category.");
-                var crustsFail = await _context.PizzaCrustCategory.ToListAsync();
-                ViewBag.CrustCategories = new SelectList(crustsFail, "Id", "CategoryName");
-                return View("~/Areas/Admin/Views/Dashboard/_AddPizzas.cshtml", pizza);
-            }
+            // if (string.IsNullOrEmpty(pizza.CrustCategory) || !int.TryParse(pizza.CrustCategory, out _))
+            // {
+            //     ModelState.AddModelError("CrustCategory", "Please select a valid crust category.");
+            //     var crustsFail = await _context.PizzaCrustCategory.ToListAsync();
+            //     ViewBag.CrustCategories = new SelectList(crustsFail, "Id", "CategoryName");
+            //     return View("~/Areas/Admin/Views/Dashboard/_AddPizzas.cshtml", pizza);
+            // }
 
             // Handle image upload
             if (ImageFile != null && ImageFile.Length > 0)
@@ -157,10 +161,10 @@ namespace FoodHub.Areas.Admin.Controllers
 
             var pizza = await _context.Pizzas.FindAsync(id);
             if (pizza == null) return NotFound();
-
+            
             // Load crust categories
-            var crusts = await _context.PizzaCrustCategory.ToListAsync();
-            ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
+         //   var crusts = await _context.PizzaCrustCategory.ToListAsync();
+          //  ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
 
             // ✅ Load the partial instead of default Edit.cshtml
             return PartialView("~/Areas/Admin/Views/Dashboard/_EditPizzas.cshtml", pizza);
@@ -171,7 +175,7 @@ namespace FoodHub.Areas.Admin.Controllers
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
 {
-    Console.WriteLine($"[DEBUG] Edit POST called for Pizza ID: {id}");
+   Console.WriteLine($"[DEBUG] Edit POST called for Pizza ID: {id}");
 
     if (id != pizza.Id)
     {
@@ -181,21 +185,26 @@ public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
 
     if (ModelState.IsValid)
     {
-        Console.WriteLine("[DEBUG] ModelState is valid.");
+                 Console.WriteLine("[DEBUG] ModelState is valid.");
 
-        var existingPizza = await _context.Pizzas.FirstOrDefaultAsync(p => p.Id == id);
+                // var existingPizza = await _context.Pizzas.FirstOrDefaultAsync(p => p.Id == id);
+       var existingPizza = await _context.Pizzas
+        .Include(p => p.PizzaPrices)
+        .ThenInclude(pp => pp.Crust)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
         if (existingPizza == null)
-        {
-            Console.WriteLine("[DEBUG] Pizza not found in DB.");
-            return NotFound();
-        }
+                {
+                   Console.WriteLine("[DEBUG] Pizza not found in DB.");
+                    return NotFound();
+                }
 
-        Console.WriteLine($"[DEBUG] Found existing pizza: {existingPizza.Name}");
+       Console.WriteLine($"[DEBUG] Found existing pizza: {existingPizza.Name}");
 
         // Handle image upload
         if (ImageFile != null && ImageFile.Length > 0)
         {
-            Console.WriteLine($"[DEBUG] New image uploaded: {ImageFile.FileName}");
+          //  Console.WriteLine($"[DEBUG] New image uploaded: {ImageFile.FileName}");
 
             var fileName = Path.GetFileName(ImageFile.FileName);
             var uploads = Path.Combine(_env.WebRootPath, "uploads/pizzas");
@@ -215,20 +224,31 @@ public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
         // Update other properties
         existingPizza.Name = pizza.Name;
         existingPizza.Description = pizza.Description;
-        existingPizza.Price = pizza.Price;
+        existingPizza.BasePrice = pizza.BasePrice;
 
         // Only update CrustCategory if a new one was selected
-        if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
-        {
-            existingPizza.CrustCategory = pizza.CrustCategory;
-        }
-        else
-        {
-            Console.WriteLine("[DEBUG] CrustCategory not changed, keeping existing value.");
-        }
+        // if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
+        // {
+        //     existingPizza.CrustCategory = pizza.CrustCategory;
+        // }
+        // else
+        // {
+        //     Console.WriteLine("[DEBUG] CrustCategory not changed, keeping existing value.");
+        // }
 
-        Console.WriteLine($"[DEBUG] Updating pizza: {existingPizza.Name}, Price: {existingPizza.Price}, Crust: {existingPizza.CrustCategory}");
-
+      //  Console.WriteLine($"[DEBUG] Updating pizza: {existingPizza.Name}, Price: {existingPizza.BasePrice}, Crust: {existingPizza.CrustCategory}");
+// Update pizza prices for each crust
+    if (pizza.PizzaPrices != null)
+    {
+        foreach (var updatedPrice in pizza.PizzaPrices)
+        {
+            var existingPrice = existingPizza.PizzaPrices.FirstOrDefault(pp => pp.Id == updatedPrice.Id);
+            if (existingPrice != null)
+            {
+                existingPrice.Price = updatedPrice.Price;
+            }
+        }
+    }
         await _context.SaveChangesAsync();
         Console.WriteLine("[DEBUG] Pizza updated successfully.");
 
@@ -245,10 +265,10 @@ public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
         }
     }
 
-    var crusts = await _context.PizzaCrustCategory.ToListAsync();
-    ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
+   // var crusts = await _context.PizzaCrustCategory.ToListAsync();
+   // ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
 
-    return PartialView("~/Areas/Admin/Views/Dashboard/_EditPizzas.cshtml", pizza);
+   return Redirect("/Admin/Dashboard?page=ViewPizza");
 }
 
         // GET: Admin/Pizzas/Delete/5
@@ -282,11 +302,35 @@ public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
                 category.CreatedAt = DateTime.Now;
                 _context.PizzaCrustCategory.Add(category);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
+                
+                 // After saving the new crust, update all pizzas with this crust
+            var pizzas = _context.Pizzas.ToList();
+            foreach (var pizza in pizzas)
+            {
+                var price = pizza.BasePrice;
 
-            return View("_AddPizzaCategory", category);
-        }
+                if (category.ExtraCharge.HasValue)
+                    price += category.ExtraCharge.Value;
+
+                if (category.PercentageIncrease.HasValue)
+                    price += pizza.BasePrice * category.PercentageIncrease.Value;
+
+                        _context.PizzaPrices.Add(new PizzaPrice
+                        {
+                            PizzaId = pizza.Id,
+                            CrustId = category.Id,
+                            Price = price,
+                            CreatedAt = DateTime.Now
+                        });
+                    }
+
+            await _context.SaveChangesAsync();
+                    // return RedirectToAction(nameof(Index));
+                    return Redirect("/Admin/Dashboard?page=ViewPizzaCategory");
+                }
+
+                return View("_AddPizzaCategory", category);
+            }
 
         // GET: Admin/Pizzas/ViewCategories
         public async Task<IActionResult> ViewCategories()
@@ -299,41 +343,64 @@ public async Task<IActionResult> Edit(int id, Pizza pizza, IFormFile? ImageFile)
 
         
         // GET: Admin/Pizzas/EditCrustCategory/5
-public async Task<IActionResult> EditCrustCategory(int? id)
-{
-    if (id == null) return NotFound();
-
-    var category = await _context.PizzaCrustCategory.FindAsync(id);
-    if (category == null) return NotFound();
-  return PartialView("~/Areas/Admin/Views/Dashboard/_EditPizzaCategory.cshtml", category);
-
-}
-
-// POST: Admin/Pizzas/EditCrustCategory/5
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> EditCrustCategory(int id, PizzaCrustCategory category)
-{
-    if (id != category.Id) return NotFound();
-
-    if (ModelState.IsValid)
-    {
-        try
+        public async Task<IActionResult> EditCrustCategory(int? id)
         {
-            _context.Update(category);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.PizzaCrustCategory.Any(c => c.Id == id)) return NotFound();
-            else throw;
+            if (id == null) return NotFound();
+
+            var category = await _context.PizzaCrustCategory.FindAsync(id);
+            if (category == null) return NotFound();
+        return PartialView("~/Areas/Admin/Views/Dashboard/_EditPizzaCategory.cshtml", category);
+
         }
 
-    // ✅ Redirect to Dashboard page showing all pizza categories
-       return Redirect("/Admin/Dashboard?page=ViewPizzaCategory");
-    }
-  return Redirect("/Admin/Dashboard?page=ViewPizzaCategory");
-}
+        // POST: Admin/Pizzas/EditCrustCategory/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCrustCategory(int id, PizzaCrustCategory category)
+        {
+            if (id != category.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(category);
+                    await _context.SaveChangesAsync();
+
+                     // Update all related PizzaPrices for this crust
+                    var pizzaPrices = await _context.PizzaPrices
+                        .Include(pp => pp.Pizza)
+                        .Where(pp => pp.CrustId == category.Id)
+                        .ToListAsync();
+
+                    foreach (var pp in pizzaPrices)
+                    {
+                        var basePrice = pp.Pizza.BasePrice;
+
+                        decimal newPrice = basePrice;
+
+                        if (category.ExtraCharge.HasValue)
+                            newPrice += category.ExtraCharge.Value;
+
+                        if (category.PercentageIncrease.HasValue)
+                            newPrice += basePrice * category.PercentageIncrease.Value;
+
+                        pp.Price = newPrice;
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.PizzaCrustCategory.Any(c => c.Id == id)) return NotFound();
+                    else throw;
+                }
+
+            // ✅ Redirect to Dashboard page showing all pizza categories
+            return Redirect("/Admin/Dashboard?page=ViewPizzaCategory");
+            }
+        return Redirect("/Admin/Dashboard?page=ViewPizzaCategory");
+        }
 
     }
 }

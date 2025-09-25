@@ -10,9 +10,7 @@
                 <th>Name</th>
                 <th>Description</th>
                 <th>Image</th>
-                <th>Price ($)</th>
-                <th>Crust Category</th>
-                <th>NAME</th>
+                <th>Base Price ($)</th>
                 <th>Created At</th>
                 <th>Actions</th>
             </tr>
@@ -31,9 +29,50 @@
                             <img src="~/uploads/pizzas/@pizza.ImageName" alt="@pizza.Name" 
                                  style="width:100px; height:70px; object-fit:cover;"/>
                         </td>
-                        <td>@pizza.Price.ToString("0.00")</td>
-                        <td>@pizza.CrustCategory</td>
-                        <td>@(ViewBag.PizzaCrustMap[pizza.Id])</td>
+                         <td>
+                            <table>
+                                <tr>
+                                    <td>
+                                         <!-- Show base price -->
+                                        <strong>Base: </strong> $@pizza.BasePrice.ToString("0.00")
+                                    </td>
+                                    <td>
+                                        
+                            <!-- Toggle button -->
+                            <button class="btn btn-sm btn-info ms-2" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#prices-@pizza.Id">
+                                View Crust Prices
+                            </button>
+                                    </td>
+                                </tr>
+                            </table>
+                         
+
+
+                            <!-- Collapsible section -->
+                            <div class="collapse mt-2" id="prices-@pizza.Id">
+
+                                    <table>
+                                        
+                                    @if (pizza.PizzaPrices != null && pizza.PizzaPrices.Any())
+                                    {
+                                        foreach (var price in pizza.PizzaPrices)
+                                        {
+                                            <tr>
+                                                <td>@price.Crust.CategoryName</td>
+                                                <td>:</td>
+                                                <td>$@price.Price.ToString("0.00")</td>    
+                                            </tr>                                           
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-muted">No crust prices available</li>
+                                    }
+                                    
+                                    </table>
+                            </div>
+                        </td>
                         <td>@pizza.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>
                             <a class="btn btn-sm btn-primary" href="/Admin/Dashboard?page=EditPizzas&id=@pizza.Id">Edit</a>

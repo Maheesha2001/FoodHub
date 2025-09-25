@@ -15,7 +15,9 @@ public class PizzasController : Controller
     // GET: /Pizzas
     public async Task<IActionResult> Index()
     {
-        var pizzas = await _context.Pizzas.ToListAsync();
+        var pizzas = await _context.Pizzas .Include(p => p.PizzaPrices)
+            .ThenInclude(pp => pp.Crust)
+        .ToListAsync();
         return View(pizzas);  // Looks for Views/Pizzas/Index.cshtml
     }
 

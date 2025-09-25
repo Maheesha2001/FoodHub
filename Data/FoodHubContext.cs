@@ -14,8 +14,7 @@ namespace FoodHub.Data
         public DbSet<Pizza> Pizzas { get; set; }
         public DbSet<Beverage> Beverages { get; set; }
         public DbSet<PizzaCrustCategory> PizzaCrustCategory { get; set; }
-
-
+        public DbSet<PizzaPrice> PizzaPrices { get; set; } = null!;
 
     }
 }

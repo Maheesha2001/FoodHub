@@ -29,26 +29,29 @@
             {
                 // var pizzas = _context.Pizzas.ToList();
                 // ViewData["Pizzas"] = pizzas;
-                var pizzas = await _context.Pizzas.ToListAsync();
-                var crusts = await _context.PizzaCrustCategory.ToListAsync();
+                var pizzas = await _context.Pizzas
+                 .Include(p => p.PizzaPrices)
+                    .ThenInclude(pp => pp.Crust)
+                    .ToListAsync();
+               // var crusts = await _context.PizzaCrustCategory.ToListAsync();
 
                 // Map Pizza.Id to Crust Category Name
-                var pizzaCrustMap = new Dictionary<int, string>();
-                foreach (var pizza in pizzas)
-                {
-                    string crustName = "N/A";
-                    if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
-                    {
-                        var crust = crusts.FirstOrDefault(c => c.Id.ToString() == pizza.CrustCategory.Trim());
-                        if (crust == null)
-                            crust = crusts.FirstOrDefault(c => c.CategoryName == pizza.CrustCategory.Trim());
-                        crustName = crust?.CategoryName ?? "N/A";
-                    }
-                    pizzaCrustMap[pizza.Id] = crustName;
-                }
+                // var pizzaCrustMap = new Dictionary<int, string>();
+                // foreach (var pizza in pizzas)
+                // {
+                //     string crustName = "N/A";
+                //     if (!string.IsNullOrWhiteSpace(pizza.CrustCategory))
+                //     {
+                //         var crust = crusts.FirstOrDefault(c => c.Id.ToString() == pizza.CrustCategory.Trim());
+                //         if (crust == null)
+                //             crust = crusts.FirstOrDefault(c => c.CategoryName == pizza.CrustCategory.Trim());
+                //         crustName = crust?.CategoryName ?? "N/A";
+                //     }
+                //     pizzaCrustMap[pizza.Id] = crustName;
+                // }
 
                 ViewData["Pizzas"] = pizzas;
-                ViewBag.PizzaCrustMap = pizzaCrustMap;
+                //ViewBag.PizzaCrustMap = pizzaCrustMap;
             }
             else if (page == "ViewBeverages")
             {
@@ -74,11 +77,16 @@
             }
          else if (page == "EditPizzas" && id.HasValue)
 {
-    var pizza = await _context.Pizzas.FindAsync(id.Value);
+                // var pizza = await _context.Pizzas.FindAsync(id.Value);
+    var pizza = await _context.Pizzas
+        .Include(p => p.PizzaPrices)
+        .ThenInclude(pp => pp.Crust)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
     if (pizza == null) return NotFound();
 
-    var crusts = await _context.PizzaCrustCategory.ToListAsync();
-    ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
+   // var crusts = await _context.PizzaCrustCategory.ToListAsync();
+  //  ViewBag.CrustCategories = new SelectList(crusts, "Id", "CategoryName", pizza.CrustCategory);
 
     // Set model for dashboard page
     ViewData.Model = pizza;
