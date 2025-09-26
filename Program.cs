@@ -1,4 +1,6 @@
 using FoodHub.Data;
+using FoodHub.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 
@@ -13,7 +15,29 @@ builder.Services.AddDbContext<FoodHubContext>(options =>
     )
 );
 
+
+// ✅ Identity
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false; //can set true later for email verification
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<FoodHubContext>();
+
 var app = builder.Build();
+
+// Seed Roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    string[] roles = new[] { "Admin", "Customer" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+}
+
 
 // Pipeline
 if (!app.Environment.IsDevelopment())
@@ -32,6 +56,8 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseRouting();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Redirect /Admin → /Admin/Dashboard

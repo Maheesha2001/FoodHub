@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using FoodHub.Models;
 
 namespace FoodHub.Data
 {
-    public class FoodHubContext : DbContext
+    public class FoodHubContext : IdentityDbContext<ApplicationUser>
     {
         public FoodHubContext(DbContextOptions<FoodHubContext> options) : base(options) { }
 

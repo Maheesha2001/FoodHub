@@ -36,7 +36,35 @@
 
                         <li class="nav-item"><a class="nav-link" href="/Pizzas">Pizzas</a></li>
                         <li class="nav-item"><a class="nav-link" href="/Beverages">Beverages</a></li>
-                        <li class="nav-item"><a class="nav-link" href=""> <i class="bi bi-cart-fill"></i> </a></li>
+                        <li class="nav-item position-relative">
+                                <a class="nav-link" href="javascript:void(0);" id="cartIcon">
+                                    <i class="bi bi-cart-fill"></i>
+                                    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        0
+                                    </span>
+                                </a>
+                            </li>
+
+                         @if (User.Identity.IsAuthenticated)
+    {
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i> @User.Identity.Name
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-3 py-1">
+                        <button type="submit" class="btn btn-link text-dark p-0">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Login</a></li>
+        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Register">Register</a></li>
+    }
                     </ul>
                 </div>
             </div>
@@ -48,6 +76,7 @@
         <div class="content">
             @RenderBody()
         </div>
+          @await Html.PartialAsync("~/Views/Cart/Index.cshtml")
     </main>
 
     <!-- Footer -->

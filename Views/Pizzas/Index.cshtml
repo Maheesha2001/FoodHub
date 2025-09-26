@@ -1,56 +1,68 @@
 @model IEnumerable<FoodHub.Models.Pizza>
 
-<h2 class="text-center mb-4">Our Pizzas</h2>
-<div class="row g-4">
-@foreach (var pizza in Model)
-{
-    <div class="col-md-3 mb-4">
-    <div class="card pizza-card shadow-sm border-0 text-center">
-           <img src="~/uploads/pizzas/@pizza.ImageName" class="card-img-top" alt="@pizza.Name" style="height:250px; object-fit:cover;">
-       <div class="card-body text-center">
-                <h5 class="card-title">@pizza.Name</h5>
-                <p class="card-text">@pizza.Description</p>
-               
-                <label for="crustDropdown-@pizza.Id">Select your crust</label>
-                <select id="crustDropdown-@pizza.Id" class="form-select crust-dropdown" data-base-price="@pizza.BasePrice" style="background-color:#e3e3e3">
-                    @foreach (var cp in pizza.PizzaPrices)
-                    {
-                        <option value="@cp.Price" data-crust="@cp.Crust.CategoryName">@cp.Crust.CategoryName ($@cp.Price)</option>
-                    }
-                </select>
+<div style="background-color:#cdcdcd; min-height:100vh; padding:40px;">
+    <h2 class="text-center mb-4">Our Pizzas</h2>
+    <div class="row g-4">
+        @foreach (var pizza in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card pizza-card shadow-sm border-0 text-center">
+                    <img src="~/uploads/pizzas/@pizza.ImageName" class="card-img-top" alt="@pizza.Name" style="height:250px; object-fit:cover;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@pizza.Name</h5>
+                        <p class="card-text">@pizza.Description</p>
 
-                @* <button class="btn btn-warning fw-bold mt-2 w-100">
-                    ADD $<span id="price-@pizza.Id">@pizza.BasePrice.ToString("0.00")</span>
-                </button> *@
+                        <label for="crustDropdown-@pizza.Id">Select your crust</label>
+                        <select id="crustDropdown-@pizza.Id" class="form-select crust-dropdown" data-base-price="@pizza.BasePrice" style="background-color:#e3e3e3">
+                            @foreach (var cp in pizza.PizzaPrices)
+                            {
+                                <option value="@cp.Price" data-crust="@cp.Crust.CategoryName">@cp.Crust.CategoryName ($@cp.Price)</option>
+                            }
+                        </select>
 
-<button class="btn btn-warning fw-bold mt-2 w-100 d-flex justify-content-between align-items-center">
-    <span>ADD</span>
-    <span>$<span id="price-@pizza.Id">@pizza.BasePrice.ToString("0.00")</span></span>
-</button>
-
-                 @* <p class="fw-bold">$@pizza.BasePrice</p> *@
-
+                        <!-- ✅ Cart-enabled ADD button -->
+                        <button class="btn btn-warning fw-bold mt-2 w-100 d-flex justify-content-between align-items-center add-to-cart"
+                                data-pizza-id="@pizza.Id"
+                                data-pizza-name="@pizza.Name">
+                            <span>ADD</span>
+                            <span>$<span id="price-@pizza.Id">@pizza.BasePrice.ToString("0.00")</span></span>
+                        </button>
+                    </div>
+                </div>
             </div>
+        }
     </div>
 </div>
 
-}
-</div>
-
 @section Scripts {
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Find all crust dropdowns
-        const dropdowns = document.querySelectorAll(".crust-dropdown");
+    <!-- Load shared cart logic -->
+    <script src="~/js/cart.js"></script>
 
-        dropdowns.forEach(dd => {
-            dd.addEventListener("change", function () {
-                const pizzaId = this.id.split('-')[1];
-                const priceSpan = document.getElementById("price-" + pizzaId);
-                const selectedPrice = parseFloat(this.value);
-                priceSpan.textContent = selectedPrice.toFixed(2);
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Update price on crust change
+            const dropdowns = document.querySelectorAll(".crust-dropdown");
+            dropdowns.forEach(dd => {
+                dd.addEventListener("change", function () {
+                    const pizzaId = this.id.split('-')[1];
+                    const priceSpan = document.getElementById("price-" + pizzaId);
+                    const selectedPrice = parseFloat(this.value);
+                    priceSpan.textContent = selectedPrice.toFixed(2);
+                });
+            });
+
+            // Handle Add to Cart
+            document.querySelectorAll(".add-to-cart").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const pizzaId = this.dataset.pizzaId;
+                    const pizzaName = this.dataset.pizzaName;
+                    const dropdown = document.getElementById("crustDropdown-" + pizzaId);
+                    const crust = dropdown.options[dropdown.selectedIndex].dataset.crust;
+                    const price = parseFloat(dropdown.value);
+
+                    addToCart(pizzaId, pizzaName, crust, price); // from cart.js
+                });
             });
         });
-    });
-</script>
+    </script>
 }

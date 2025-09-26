@@ -1,0 +1,36 @@
+@* Cart Sidebar *@
+<div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header d-flex justify-content-between align-items-center">
+        <h5>Your Cart</h5>
+        <button class="btn-close" onclick="closeCartSidebar()"></button>
+    </div>
+    <ul id="cart-items" class="list-group list-group-flush"></ul>
+    <div class="cart-footer p-3 d-flex flex-column align-items-start">
+        <strong>Total: <span id="cart-total">$0.00</span></strong>
+        <button class="btn btn-success mt-2 w-100">CHECKOUT</button>
+    </div>
+
+    
+</div>
+
+<style>
+    .cart-sidebar {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 350px;
+        height: 100%;
+        background: #fff;
+        box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+        transition: right 0.3s ease;
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+    }
+    .cart-sidebar.show { right: 0; }
+    .cart-header, .cart-footer {
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+    }
+    .cart-footer { border-top: 1px solid #ddd; margin-top: auto; }
+</style>

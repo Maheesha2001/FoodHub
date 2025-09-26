@@ -1,20 +1,27 @@
 @model IEnumerable<FoodHub.Models.Beverage>
 
-<div class="container py-5">
+<div style="background-color:#cdcdcd; min-height:100vh; padding:40px;">
     <h2 class="text-center mb-4">Our Beverages</h2>
-    <div class="row">
+    <div class="row g-4">
         @foreach (var beverage in Model)
         {
             <div class="col-md-3 mb-4">
                 <div class="card shadow-sm border-0 h-100 text-center beverage-card">
-                    <img src="~/uploads/beverages/@beverage.ImageName" 
-                         class="card-img-top" 
-                         alt="@beverage.Name" 
-                         style="height:200px; object-fit:cover;" />
+                    <img src="~/uploads/beverages/@beverage.ImageName" class="card-img-top" alt="@beverage.Name" style="height:200px; object-fit:cover;" />
                     <div class="card-body">
                         <h5 class="card-title">@beverage.Name</h5>
                         <p class="card-text">@beverage.Description</p>
-                        <p class="fw-bold">$@beverage.Price</p>
+
+                        <!-- ✅ Cart-enabled ADD button -->
+                       <button class="btn btn-warning fw-bold mt-2 w-100 d-flex justify-content-between align-items-center add-to-cart"
+                            data-type="beverage"
+                            data-id="@beverage.Id"
+                            data-name="@beverage.Name"
+                            data-price="@beverage.Price">
+                        <span>ADD</span>
+                        <span>$@beverage.Price</span>
+                    </button>
+
                     </div>
                 </div>
             </div>
@@ -31,3 +38,20 @@
         box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
     }
 </style>
+@section Scripts { <script src="~/js/cart.js"></script> 
+<script> 
+document.addEventListener("DOMContentLoaded", function () { 
+    document.querySelectorAll(".add-to-cart").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+        const type = this.dataset.type;   // "beverage"
+        const price = parseFloat(this.dataset.price);
+
+        addToCart(id, name, type, price);
+    });
+});
+
+}); 
+</script> 
+}
