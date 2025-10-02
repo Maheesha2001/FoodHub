@@ -20,38 +20,34 @@ public class AccountController : Controller
     [HttpPost]
     public async Task<IActionResult> Register(RegisterVM model)
     {
-        Console.WriteLine("ffff");
-        if (!ModelState.IsValid)
-            {
-                Console.WriteLine("not valid");
-                foreach (var key in ModelState.Keys)
-            {
-                var errors = ModelState[key].Errors;
-                foreach (var error in errors)
-                {
-                    Console.WriteLine($"{key}: {error.ErrorMessage}");
-                }
-            }
-                return View(model);
-            }
 
-Console.WriteLine("1");
+      if (!ModelState.IsValid)
+        return View(model);
+
+         // Check if email already exists
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+        {
+            ModelState.AddModelError("Email", "An account with this email already exists.");
+            return View(model);
+        }
+
+
         var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FullName = model.FullName };
         var result = await _userManager.CreateAsync(user, model.Password);
-        Console.WriteLine("2");
+
         if (result.Succeeded)
         {
-            Console.WriteLine("3");
+
             await _userManager.AddToRoleAsync(user, "Customer");
             await _signInManager.SignInAsync(user, isPersistent: false);
             return RedirectToAction("Index", "Home");
         }
-        Console.WriteLine("4");
-        Console.WriteLine("CreateAsync failed:");
+
         foreach (var err in result.Errors) {
-             Console.WriteLine($"Code: {err.Code}, Description: {err.Description}");
+            Console.WriteLine($"Code: {err.Code}, Description: {err.Description}");
             ModelState.AddModelError("", err.Description); }
-           Console.WriteLine("end");
+
         return View(model);
     }
 

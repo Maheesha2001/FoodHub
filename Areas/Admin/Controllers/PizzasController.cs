@@ -147,8 +147,33 @@ namespace FoodHub.Areas.Admin.Controllers
             pizza.CreatedAt = DateTime.Now;
 
             // CrustCategory is already string, no conversion needed
-            _context.Pizzas.Add(pizza);
+            _context.Pizzas.Add(pizza);          
             await _context.SaveChangesAsync();
+
+               // 🔑 Assign existing crusts to this pizza
+    var crusts = await _context.PizzaCrustCategory.ToListAsync();
+    foreach (var crust in crusts)
+    {
+        decimal price = pizza.BasePrice;
+
+        if (crust.ExtraCharge.HasValue)
+            price += crust.ExtraCharge.Value;
+
+        if (crust.PercentageIncrease.HasValue)
+            price += pizza.BasePrice * crust.PercentageIncrease.Value;
+
+        var pizzaPrice = new PizzaPrice
+        {
+            PizzaId = pizza.Id,
+            CrustId = crust.Id,
+            Price = price,
+            CreatedAt = DateTime.Now
+        };
+
+        _context.PizzaPrices.Add(pizzaPrice);
+    }
+
+    await _context.SaveChangesAsync();
 
             return Redirect("/Admin/Dashboard?page=ViewPizza");
         }
