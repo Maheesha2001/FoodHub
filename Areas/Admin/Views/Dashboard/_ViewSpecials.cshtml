@@ -1,6 +1,10 @@
     @* Partial view for View Specials *@
     @model IEnumerable<FoodHub.Models.Special>
-    <h2>Specials</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-warning mb-3">Specials</h2>
+        <a class="btn btn-success" href="/Admin/Dashboard?page=AddSpecials">ADD SPECIALS</a>
+    </div>
+
     <table class="table table-striped table-bordered align-middle">
         <thead class="table-dark">
             <tr>

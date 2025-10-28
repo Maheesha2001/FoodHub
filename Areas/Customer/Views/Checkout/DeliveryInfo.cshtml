@@ -1,0 +1,86 @@
+@model FoodHub.ViewModels.Checkout.DeliveryInfoViewModel
+@{
+    ViewData["Title"] = "Checkout - Delivery Info";
+     Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="min-height:100vh; padding:40px;">
+
+<h2>Delivery & Contact Info</h2>
+
+<form asp-area="Customer" asp-controller="Checkout" asp-action="DeliveryInfo" method="post">
+   @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="Name">Name</label>
+        <input name="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email">Email</label>
+        <input name="Email" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Phone">Phone</label>
+        <input name="Phone" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Address">Address</label>
+        <input name="Address" class="form-control" id="Address" />
+
+        <button type="button" class="btn btn-outline-secondary mt-1" onclick="getLocation()">Use Current Location</button>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DeliveryNotes">Notes (optional)</label>
+        <textarea name="DeliveryNotes" class="form-control"></textarea>
+    </div>
+
+    <button type="button" class="btn btn-secondary" onclick="window.location.href='/Customer/Checkout/Index'">
+        ⬅ Prev: Checkout
+    </button>
+
+    <button type="submit" class="btn btn-primary">Next: Payment</button>
+</form>
+
+</div>
+
+
+@section Scripts{
+<script>
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(fetchAddress, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function fetchAddress(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    // Optional: show user temporary coordinates while resolving to address
+    document.getElementById("Address").value = "Detecting location...";
+
+    // Reverse Geocode using OpenStreetMap Nominatim (No API key needed)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.display_name) {
+                document.getElementById("Address").value = data.display_name;
+            } else {
+                document.getElementById("Address").value = `${lat}, ${lon}`;
+            }
+        })
+        .catch(() => {
+            document.getElementById("Address").value = `${lat}, ${lon}`;
+        });
+}
+
+function showError(error) {
+    alert("Unable to retrieve location. Please allow location access in your browser.");
+}
+</script>
+}

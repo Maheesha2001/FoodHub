@@ -1,0 +1,277 @@
+@model FoodHub.ViewModels.Checkout.PaymentViewModel
+@{
+    ViewData["Title"] = "Checkout - Payment";
+    Layout = "../_Shared/_SharedLayout.cshtml";
+}
+
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1; /* push footer to bottom */
+}
+
+footer.custom-footer {
+    text-align: center;
+    padding: 1em 0;
+    background: #000000;
+    color: #fff;
+    width: 100%;
+    border-top: 2px solid #444; /* border at the top of footer */
+}
+    .checkout-container {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: flex-start;
+        gap: 30px;
+        margin-top: 50px;
+        flex-wrap: wrap;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .checkout-section {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        padding: 25px 30px;
+        width: 30%;
+        min-width: 320px;
+        min-height: 420px; /* ✅ ensures equal height */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .checkout-section:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .checkout-section h4, .checkout-section h2 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+
+    .checkout-section p {
+        margin: 8px 0;
+        color: #555;
+        line-height: 1.6;
+    }
+
+    /* ✅ Delivery info styling */
+    .delivery-info p {
+        margin: 10px 0;
+        padding: 8px 10px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .delivery-info strong {
+        display: inline-block;
+        width: 90px;
+        color: #222;
+    }
+
+    table.table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table.table th, table.table td {
+        border-bottom: 1px solid #eee;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    table.table th {
+        color: #444;
+        background: #fafafa;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #198754;
+        outline: none;
+    }
+
+    .btn-success {
+        width: 100%;
+        background-color: #198754;
+        border: none;
+        padding: 10px;
+        border-radius: 6px;
+        color: #fff;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-success:hover {
+        background-color: #157347;
+    }
+
+    @@media (max-width: 992px) {
+        .checkout-container {
+            flex-direction: column;
+            align-items: center;
+        }
+        .checkout-section {
+            width: 90%;
+        }
+    }
+</style>
+
+<div class="checkout-container">
+
+    <!-- 🧾 ORDER SUMMARY -->
+    <div class="checkout-section">
+        <h3>Order Summary</h4>
+        <hr />
+        @if (Model.OrderItems != null && Model.OrderItems.Any())
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems ?? Enumerable.Empty<FoodHub.Models.OrderItem>())
+                    {
+                        <tr>
+                            <td>@item.ProductName</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.UnitPrice.ToString("C")</td>
+                            <td>@item.TotalPrice.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <p><strong>Total:</strong> @Model.Order?.TotalAmount.ToString("C")</p>
+        }
+        else
+        {
+            <p>No items found in order.</p>
+        }
+    </div>
+
+    <!-- 🚚 DELIVERY DETAILS -->
+    <div class="checkout-section">
+        <h3>Delivery Details</h4>
+        <hr />
+        @if (Model.DeliveryInfo != null)
+        {
+            <div class="delivery-info">
+                <p><strong>Name:</strong> @Model.DeliveryInfo.Name</p>
+                <p><strong>Email:</strong> @Model.DeliveryInfo.Email</p>
+                <p><strong>Phone:</strong> @Model.DeliveryInfo.Phone</p>
+                <p><strong>Address:</strong> @Model.DeliveryInfo.Address</p>
+                <p><strong>Notes:</strong> @Model.DeliveryInfo.DeliveryNotes</p>
+            </div>
+        }
+        else
+        {
+            <p>No delivery info found.</p>
+        }
+    </div>
+
+    <!-- 💳 PAYMENT FORM -->
+    <div class="checkout-section">
+        <h3>Payment</h2>
+        <hr />
+
+       <!-- Payment Option Selection -->
+<form id="paymentChoiceForm" style="font-size: 1.1rem; font-weight: 500;">
+    <div class="mb-3">
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" id="paymentOption1" name="payment" value="Cash" checked>
+            <label class="form-check-label" for="paymentOption1">Cash on Delivery</label>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input" type="radio" id="paymentOption2" name="payment" value="Card">
+            <label class="form-check-label" for="paymentOption2">Online Payment</label>
+        </div>
+    </div>
+</form>
+
+
+<!-- Card Payment Form -->
+<form id="cardPaymentForm" asp-action="Payment" method="post" style="display:none;">
+      <input type="hidden" name="Order.Id" value="@Model.Order.Id" />
+    <input type="hidden" name="Order.TotalAmount" value="@Model.Order.TotalAmount" />
+    <div class="mb-3">
+        <label>Card Number</label>
+        <input asp-for="CardNumber" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Expiry</label>
+        <input asp-for="Expiry" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>CVV</label>
+        <input asp-for="CVV" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-warning w-100">
+        Complete Order
+    </button>
+</form>
+
+<!-- Cash Payment Submission -->
+<form id="cashPaymentForm" asp-action="Payment" method="post">
+  <input type="hidden" name="Order.Id" value="@Model.Order.Id" />
+    <input type="hidden" name="Order.TotalAmount" value="@Model.Order.TotalAmount" />
+    <input type="hidden" name="PaymentMethod" value="Cash" />
+    <button type="submit" id="cashSubmitBtn" class="btn btn-warning w-100">
+        Complete Order
+    </button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const cashForm = document.getElementById("cashPaymentForm");
+    const cardForm = document.getElementById("cardPaymentForm");
+    const paymentRadios = document.getElementsByName("payment");
+
+    // toggle visibility based on selected payment option
+    paymentRadios.forEach(radio => {
+        radio.addEventListener("change", () => {
+            if (radio.value === "Card" && radio.checked) {
+                cardForm.style.display = "block";
+                cashForm.style.display = "none";
+            } else if (radio.value === "Cash" && radio.checked) {
+                cashForm.style.display = "block";
+                cardForm.style.display = "none";
+            }
+        });
+    });
+});
+</script>
+
+    </div>
+</div>

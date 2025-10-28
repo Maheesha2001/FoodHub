@@ -1,17 +1,23 @@
+using FoodHub.Data;
 using FoodHub.Models;
 using FoodHub.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using FoodHub.ViewModels.Checkout;
+using Microsoft.EntityFrameworkCore; // ✅ Needed for Include()
+using System.Security.Claims; // ✅ Needed for User.FindFirstValue
 
 public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly FoodHubContext _db;
 
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,  FoodHubContext db)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _db = db;
     }
 
     [HttpGet]
@@ -54,17 +60,76 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult Login() => View();
 
+    // [HttpPost]
+    // public async Task<IActionResult> Login(LoginVM model)
+    // {
+    //     if (!ModelState.IsValid) return View(model);
+
+    //     var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+    //     if (result.Succeeded) return RedirectToAction("Index", "Home");
+
+    //     ModelState.AddModelError("", "Invalid login attempt");
+    //     return View(model);
+    // }
+
     [HttpPost]
-    public async Task<IActionResult> Login(LoginVM model)
+public async Task<IActionResult> Login(LoginVM model, string returnUrl = null)
+{
+    if (!ModelState.IsValid) return View(model);
+
+    var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+    
+    if (result.Succeeded)
     {
-        if (!ModelState.IsValid) return View(model);
+        // ✅ STEP 2: Read cart stored in Session before login
+        var sessionCartJson = HttpContext.Session.GetString("GuestCart");
+        if (!string.IsNullOrEmpty(sessionCartJson))
+        {
+            var guestCart = System.Text.Json.JsonSerializer.Deserialize<List<CartItemViewModel>>(sessionCartJson);
+            var userId = (await _userManager.FindByEmailAsync(model.Email)).Id;
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-        if (result.Succeeded) return RedirectToAction("Index", "Home");
+            if (guestCart != null && guestCart.Count > 0)
+            {
+                // ✅ Merge logic exactly like SaveCheckoutCart
+                var cart = _db.Carts.Include(c => c.Items).FirstOrDefault(c => c.UserId == userId)
+                          ?? new Cart { UserId = userId, CreatedAt = DateTime.Now, Items = new List<CartItem>() };
 
-        ModelState.AddModelError("", "Invalid login attempt");
-        return View(model);
+                foreach (var incoming in guestCart)
+                {
+                    if (!int.TryParse(incoming.Id, out int pid)) continue;
+
+                    var existing = cart.Items.FirstOrDefault(i => i.ProductId == pid && i.Type == incoming.Type);
+                    if (existing != null)
+                        existing.Quantity += incoming.Quantity;
+                    else
+                        cart.Items.Add(new CartItem {
+                            ProductId = pid,
+                            ProductName = incoming.Name,
+                            Quantity = incoming.Quantity,
+                            Type = incoming.Type,
+                            Price = incoming.Price
+                        });
+                }
+
+                if (cart.Id == 0) _db.Carts.Add(cart);
+                _db.SaveChanges();
+            }
+
+            // ✅ Clear temp session & LocalStorage cart trigger
+            HttpContext.Session.Remove("GuestCart");
+        }
+
+        // ✅ Redirect properly after merge
+        if (!string.IsNullOrEmpty(returnUrl))
+            return Redirect(returnUrl);
+
+      return RedirectToAction("Index", "Checkout", new { area = "Customer" });
+
     }
+
+    ModelState.AddModelError("", "Invalid login attempt");
+    return View(model);
+}
 
     public async Task<IActionResult> Logout()
     {

@@ -1,6 +1,10 @@
 @model IEnumerable<FoodHub.Models.PizzaCrustCategory>
 
-<h3 class="text-warning mb-3">Pizza Crusts</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-warning mb-3">Pizza Crusts</h2>
+    <a class="btn btn-success" href="/Admin/Dashboard?page=AddPizzaCategory">ADD PIZZA CRUST</a>
+</div>
+
 
 @if (Model != null && Model.Any())
 {

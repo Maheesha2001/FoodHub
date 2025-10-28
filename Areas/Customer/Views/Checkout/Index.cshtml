@@ -1,0 +1,439 @@
+@model List<FoodHub.ViewModels.Checkout.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Checkout - Cart Review";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="min-height:100vh; padding:40px;">
+    <div class="checkout-steps mb-4">
+        <ul class="steps d-flex justify-content-between list-unstyled">
+            <li class="step active"><span class="step-title">Shopping Cart</span></li>
+            <li class="step"><span class="step-number">2</span><span class="step-title">Delivery Information</span></li>
+            <li class="step"><span class="step-number">3</span><span class="step-title">Confirmation & Payment</span></li>
+        </ul>
+    </div>
+
+    <h2 class="mb-4">Checkout: Cart Review</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="checkout-cart-body"></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                <td id="checkout-cart-total">0.00</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="d-flex justify-content-between">
+        <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
+       <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout")">Next: Delivery Info →</a>
+
+
+    </div>
+</div>
+
+@section Scripts {
+<script>
+ const getCartUrl = '@Url.Action("GetCartItems", "Cart", new { area = "" })';
+const updateQtyUrl = '@Url.Action("UpdateItemQuantity", "Cart", new { area = "" })';
+const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
+const saveCheckoutUrl = '@Url.Action("SaveCheckoutCart", "Cart", new { area = "" })';
+@* const isFrozen = @((TempData["FrozenOrderId"] != null) ? "true" : "false"); *@
+
+let isFrozen = false;
+
+async function checkFrozenStatus() {
+    try {
+        const res = await fetch("/Customer/Checkout/IsCartFrozen");
+        const data = await res.json();
+        isFrozen = data.frozen;
+        console.log("DB Frozen Check →", isFrozen);
+    } catch (err) {
+        console.error("Error checking frozen status:", err);
+    }
+}
+
+async function loadCart() {
+    try {
+        const res = await fetch(getCartUrl);
+        const data = await res.json();
+
+        const tbody = document.getElementById("checkout-cart-body");
+        const totalCell = document.getElementById("checkout-cart-total");
+
+        if (!data.items || data.items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Your cart is empty.</td></tr>`;
+            totalCell.innerText = "0.00";
+            return;
+        }
+
+        let html = "";
+        let total = 0;
+
+        @* data.items.forEach((item) => {
+            const lineTotal = item.price * item.quantity;
+            total += lineTotal;
+
+            html += `
+                <tr data-id="${item.id}" data-type="${item.type}">
+                    <td>${item.name}</td>
+                    <td>${item.type}</td>
+                    <td><input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" /></td>
+                    <td class="unit-price">${item.price.toFixed(2)}</td>
+                    <td class="line-total">${lineTotal.toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-sm btn-danger remove-item">X</button></td>
+                </tr>`;
+        }); *@
+
+        data.items.forEach((item) => {
+    const lineTotal = item.price * item.quantity;
+    total += lineTotal;
+
+    // Freeze inputs/buttons if isFrozen
+let qtyInput = "";
+let removeBtn = "";
+
+    if(isFrozen){
+        qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" disabled />` ;
+        removeBtn = "";
+        console.log("Correct is frozen");
+    } else {
+        qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" />`;
+        removeBtn = `<button type="button" class="btn btn-sm btn-danger remove-item">X</button>`;
+        console.log("WRONG is frozen");
+    }
+      
+   
+    html += `
+        <tr data-id="${item.id}" data-type="${item.type}">
+            <td>${item.name}</td>
+            <td>${item.type}</td>
+            <td>${qtyInput}</td>
+            <td class="unit-price">${item.price.toFixed(2)}</td>
+            <td class="line-total">${lineTotal.toFixed(2)}</td>
+            <td>${removeBtn}</td>
+        </tr>`;
+});
+
+
+        tbody.innerHTML = html;
+        totalCell.innerText = total.toFixed(2);
+        attachEvents();
+    } catch (err) {
+        console.error("Error loading cart:", err);
+    }
+}
+
+@* function attachEvents() {
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', async function () {
+            const row = input.closest('tr');
+            const id = row.dataset.id;
+            const type = row.dataset.type;
+            const qty = parseInt(input.value);
+
+            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, {
+                method: 'POST'
+            });
+
+            if (!res.ok) return console.error('Failed to update quantity:', res.status);
+            const data = await res.json();
+            if (data.success) {
+                const price = parseFloat(row.querySelector('.unit-price').innerText);
+                row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
+                updateTotal();
+            }
+        });
+    });
+
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            const type = row.dataset.type;
+
+            const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+            if (!res.ok) return console.error('Failed to remove item:', res.status);
+            const data = await res.json();
+            if (data.success) {
+                row.remove();
+                updateTotal();
+            }
+        });
+    });
+} *@
+
+function attachEvents() {
+    if (isFrozen) {
+        // ❌ Freeze UI
+        document.querySelectorAll('.quantity-input').forEach(input => input.disabled = true);
+        document.querySelectorAll('.remove-item').forEach(btn => btn.remove());
+        return;
+    }
+
+    // Editable cart: normal events
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', async function () {
+            const row = input.closest('tr');
+            const id = row.dataset.id;
+            const type = row.dataset.type;
+            const qty = parseInt(input.value);
+
+            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+            if (!res.ok) return console.error('Failed to update quantity:', res.status);
+            const data = await res.json();
+            if (data.success) {
+                const price = parseFloat(row.querySelector('.unit-price').innerText);
+                row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
+                updateTotal();
+            }
+        });
+    });
+
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            const type = row.dataset.type;
+
+            const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+            if (!res.ok) return console.error('Failed to remove item:', res.status);
+            const data = await res.json();
+            if (data.success) {
+                row.remove();
+                updateTotal();
+            }
+        });
+    });
+}
+
+
+@* 
+async function tryRestoreLocalCartIfNeeded() {
+    try {
+        // 1) Read local cart
+        const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+        if (!localCart || localCart.length === 0) {
+            console.log("No local cart to restore.");
+            await loadCart(); // just load server cart
+            return;
+        }
+        console.log("Local cart exists (will attempt restore):", localCart);
+
+        // 2) Ask server for its current cart
+        const serverRes = await fetch(getCartUrl);
+        let serverJson = null;
+        try {
+            serverJson = await serverRes.json();
+        } catch (e) {
+            console.warn("GetCartItems did not return JSON:", e);
+            serverJson = { items: [] };
+        }
+
+        const serverItems = serverJson?.items || [];
+        if (serverItems.length > 0) {
+            console.log("Server cart already contains items — merging strategy: we'll POST local items to merge.");
+            // continue to merge (we still post so server-side merging code can combine)
+        } else {
+            console.log("Server cart is empty — will POST local cart to SaveCheckoutCart.");
+        }
+
+        // 3) POST local cart to SaveCheckoutCart (server will merge)
+        const payload = localCart.map(i => ({
+            // use lowercase keys if your ViewModel has JsonPropertyName for lowercase
+            id: i.id?.toString?.() ?? String(i.id),
+            name: i.name,
+            type: i.type,
+            price: i.price,
+            quantity: i.quantity
+        }));
+
+        console.log("Posting payload to SaveCheckoutCart:", payload);
+
+        const postRes = await fetch(saveCheckoutUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+                // optional: anti-forgery token header if you use one. If you do, set header here.
+                // "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify(payload),
+            credentials: "same-origin" // ensure cookies are sent
+        });
+
+        // diagnose non-OK responses by printing body
+        const respText = await postRes.text();
+        console.log("SaveCheckoutCart response status:", postRes.status, "body:", respText);
+
+        if (postRes.ok) {
+            console.log("Cart restored/merged on server successfully.");
+            localStorage.removeItem("cart");          // clear local cart (optional)
+            await loadCart();                         // reload UI with server cart
+        } else if (postRes.status === 401) {
+            console.warn("SaveCheckoutCart returned 401 — user probably not authenticated yet. Redirect to login.");
+            // redirect to login and let restore happen after login
+            window.location.href = "/Account/Login?returnUrl=/Customer/Checkout/Index";
+        } else if (postRes.status === 400) {
+            console.warn("SaveCheckoutCart returned 400. Response text:", respText);
+            // show message or attempt to inspect respText
+            await loadCart(); // show whatever server has
+        } else {
+            console.error("SaveCheckoutCart failed:", postRes.status, respText);
+            await loadCart();
+        }
+    } catch (err) {
+        console.error("Error during cart restore attempt:", err);
+        await loadCart(); // fallback to display server cart anyway
+    }
+} *@
+
+async function tryRestoreLocalCartIfNeeded() {
+    try {
+        // ✅ Always load server cart first
+        const serverRes = await fetch(getCartUrl);
+        let serverJson = { items: [] };
+        console.log("🔍 Raw server response:", serverJson);
+
+        try {
+            serverJson = await serverRes.json();
+        } catch (e) {
+            console.warn("GetCartItems did not return JSON:", e);
+        }
+
+        const serverItems = serverJson?.items || [];
+        const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+        // ✅ If DB already has items, ignore local storage and load DB cart
+        if (serverItems.length > 0) {
+            console.log("✅ Server cart has priority — loading DB cart");
+            localStorage.removeItem("cart"); // clear old local storage
+            await loadCart(); // just show DB data
+            return;
+        }
+
+        // ✅ If DB is empty but local has items, push them to DB
+        if (localCart.length > 0) {
+            console.log("🚀 Pushing local cart to DB:", localCart);
+
+            const payload = localCart.map(i => ({
+                id: i.id.toString(),
+                name: i.name,
+                type: i.type,
+                price: i.price,
+                quantity: i.quantity
+            }));
+
+            const postRes = await fetch(saveCheckoutUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                credentials: "same-origin"
+            });
+
+            if (postRes.ok) {
+                console.log("✅ Local cart synced to DB");
+                localStorage.removeItem("cart");
+                await loadCart();
+            } else {
+                console.error("❌ Failed to sync cart:", await postRes.text());
+                await loadCart();
+            }
+        } else {
+            // ✅ Both empty, just load UI
+            console.log("🟡 Both server and local are empty");
+            await loadCart();
+        }
+
+    } catch (err) {
+        console.error("❌ Error during cart restore attempt:", err);
+        await loadCart();
+    }
+}
+
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.line-total').forEach(cell => {
+        total += parseFloat(cell.innerText);
+    });
+    document.getElementById('checkout-cart-total').innerText = total.toFixed(2);
+}
+
+// ✅ Restore local cart if user just logged in
+@* document.addEventListener("DOMContentLoaded", async () => {
+      await tryRestoreLocalCartIfNeeded();
+    const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    if (localCart.length > 0) {
+        try {
+            const res = await fetch(saveCheckoutUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(localCart)
+            });
+
+            if (res.ok) {
+                localStorage.removeItem("cart");
+                await loadCart(); // ✅ Merge shown in table
+            } else {
+                console.error("Failed to restore cart after login.");
+            }
+        } catch (err) {
+            console.error("Error restoring cart:", err);
+        }
+    } else {
+        await loadCart();
+    }
+}); *@
+
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await checkFrozenStatus();
+    await tryRestoreLocalCartIfNeeded(); // ✅ That's it. Do NOT restore again manually.
+});
+
+</script>
+}
+
+
+<style>
+    /* Disable input styling fully when frozen */
+    input[disabled] {
+        background-color: #f5f5f5;
+        color: #555;
+        cursor: not-allowed;
+        border: none;
+        box-shadow: none;
+        pointer-events: none;
+    }
+
+    /* Remove arrow buttons in number input */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+
+    /* Remove delete icon column space */
+    td:empty {
+        display: none;
+    }
+</style>

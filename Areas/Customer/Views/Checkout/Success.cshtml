@@ -1,0 +1,12 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Order Successful";
+}
+
+<h2>Thank you for your order!</h2>
+
+<p>Order ID: @Model.Id</p>
+<p>Total Amount: $@Model.TotalAmount</p>
+<p>Placed on: @Model.CreatedAt</p>
+
+<a class="btn btn-primary" href="/">Back to Home</a>
