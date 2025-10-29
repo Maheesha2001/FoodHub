@@ -207,6 +207,64 @@ function closeCartSidebar() {
     if (sidebar) sidebar.classList.remove("show");
 }
 
+// // ---------------------- CHECKOUT BUTTON ----------------------
+// function attachCheckoutListener() {
+//     const checkoutBtn = document.getElementById('checkoutBtn');
+//     if (!checkoutBtn) return;
+
+//     checkoutBtn.addEventListener('click', async () => {
+//         try {
+//             const res = await fetch('/Cart/IsLoggedIn');
+//             const text = await res.text();
+//            // const data = await res.json();
+//             const data = text ? JSON.parse(text) : { isLoggedIn: false };
+
+//             if (data.isLoggedIn) {
+//                 const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+
+//                 // Transform keys to match JsonPropertyName
+//                 const payload = cartItems.map(i => ({
+//                     id: i.id.toString(),
+//                     name: i.name,
+//                     type: i.type,
+//                     price: i.price,
+//                     quantity: i.quantity
+//                 }));
+
+
+//                 const response = await fetch("/Cart/SaveCheckoutCart", {
+//                     method: "POST",
+//                     headers: {
+//                         "Content-Type": "application/json",
+//                         "RequestVerificationToken":
+//                             document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+//                     },
+//                     body: JSON.stringify(payload)
+//                 });
+
+//                 if (response.ok) {
+//                      localStorage.removeItem("cart");
+
+//                     // ✅ Optionally reload server cart to sync UI
+//                     await loadCart();
+//                     window.location.href = "/Customer/Checkout/Index";
+//                 } else {
+//                     alert("Error saving your cart!");
+//                 }
+//             } else {
+//                 await fetch("/Cart/StoreGuestCart", {
+//                     method: "POST",
+//                     headers: { "Content-Type": "application/json" },
+//                     body: JSON.stringify(localStorage.getItem("cart") || "[]"),
+//                     credentials: "same-origin"
+//                 });
+//                 window.location.href = "/Account/Login?returnUrl=/Customer/Checkout/Index";
+//             }
+//         } catch (err) {
+//             console.error("Error during checkout:", err);
+//         }
+//     });
+// }
 // ---------------------- CHECKOUT BUTTON ----------------------
 function attachCheckoutListener() {
     const checkoutBtn = document.getElementById('checkoutBtn');
@@ -214,58 +272,38 @@ function attachCheckoutListener() {
 
     checkoutBtn.addEventListener('click', async () => {
         try {
-            const res = await fetch('/Cart/IsLoggedIn');
-            const text = await res.text();
-           // const data = await res.json();
-            const data = text ? JSON.parse(text) : { isLoggedIn: false };
+            const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+            const payload = cartItems.map(i => ({
+                id: i.id.toString(),
+                name: i.name,
+                type: i.type,
+                price: i.price,
+                quantity: i.quantity
+            }));
 
-            if (data.isLoggedIn) {
-                const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+            // Save cart to server
+            const response = await fetch("/Cart/SaveCheckoutCart", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "RequestVerificationToken":
+                        document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(payload)
+            });
 
-                // Transform keys to match JsonPropertyName
-                const payload = cartItems.map(i => ({
-                    id: i.id.toString(),
-                    name: i.name,
-                    type: i.type,
-                    price: i.price,
-                    quantity: i.quantity
-                }));
-
-
-                const response = await fetch("/Cart/SaveCheckoutCart", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "RequestVerificationToken":
-                            document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                     localStorage.removeItem("cart");
-
-                    // ✅ Optionally reload server cart to sync UI
-                    await loadCart();
-                    window.location.href = "/Customer/Checkout/Index";
-                } else {
-                    alert("Error saving your cart!");
-                }
+            if (response.ok) {
+                localStorage.removeItem("cart");
+                await loadCart(); // sync server cart
+                window.location.href = "/Cart/Checkout"; // ✅ redirect to server-protected page
             } else {
-                await fetch("/Cart/StoreGuestCart", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(localStorage.getItem("cart") || "[]"),
-                    credentials: "same-origin"
-                });
-                window.location.href = "/Account/Login?returnUrl=/Customer/Checkout/Index";
+                alert("Error saving your cart!");
             }
         } catch (err) {
             console.error("Error during checkout:", err);
         }
     });
 }
-
 // ---------------------- INITIALIZE ----------------------
 document.addEventListener("DOMContentLoaded", function () {
     loadCart();

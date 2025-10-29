@@ -39,7 +39,10 @@
 
     <div class="d-flex justify-content-between">
         <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
-       <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout")">Next: Delivery Info →</a>
+       <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer" })">
+    Next: Delivery Info →
+</a>
+
 
 
     </div>

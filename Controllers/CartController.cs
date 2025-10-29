@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace FoodHub.Controllers
 {
-    [Authorize]
+
     public class CartController : Controller
     {
         private readonly FoodHubContext _db;
@@ -18,10 +18,13 @@ namespace FoodHub.Controllers
         {
             _db = db;
         }
-
+        [Authorize]
         public IActionResult Checkout()
         {
-            return View();
+            Console.WriteLine("Authenticated? " + User.Identity?.IsAuthenticated);
+            Console.WriteLine("User: " + User.Identity?.Name);
+           // return View();
+           return View("~/Areas/Customer/Views/Checkout/Index.cshtml");
         }
 
         [HttpPost]
@@ -179,14 +182,14 @@ namespace FoodHub.Controllers
         }
 
 
-        [HttpGet]
-        public IActionResult IsLoggedIn()
-        {
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-                return Json(new { isLoggedIn = true });
+        // [HttpGet]
+        // public IActionResult IsLoggedIn()
+        // {
+        //     if (User.Identity != null && User.Identity.IsAuthenticated)
+        //         return Json(new { isLoggedIn = true });
 
-            return Json(new { isLoggedIn = false });
-        }
+        //     return Json(new { isLoggedIn = false });
+        // }
 
         // ✅ Remove a specific item from cart
         [HttpPost]

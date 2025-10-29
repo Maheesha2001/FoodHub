@@ -71,8 +71,7 @@ namespace FoodHub.Areas.Customer.Controllers
         public async Task<IActionResult> DeliveryInfo()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
-
+        
             var cart = _db.Carts.Include(c => c.Items)
                                 .FirstOrDefault(c => c.UserId == userId && c.Status == "Active");
 
@@ -129,9 +128,7 @@ namespace FoodHub.Areas.Customer.Controllers
             Console.WriteLine($"Model: Name={model.Name}, Email={model.Email}, Phone={model.Phone}, Address={model.Address}, DeliveryNotes={model.DeliveryNotes}");
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return RedirectToAction("Login", "Account");
-
+        
             var pendingOrder = _db.Orders.FirstOrDefault(o => o.UserId == userId && o.Status == "Pending");
             if (pendingOrder == null)
                 return RedirectToAction("Cart");
@@ -163,23 +160,26 @@ namespace FoodHub.Areas.Customer.Controllers
             _db.SaveChanges();
             Console.WriteLine("✅ DeliveryInfo saved successfully.");
 
-            return RedirectToAction("Payment");
+           // return RedirectToAction("Payment");
+          // return RedirectToAction("Payment", new { orderId = pendingOrder.Id });
+          return RedirectToAction("Payment", "Checkout", new { area = "Customer", orderId = pendingOrder.Id });
+
+
         }
 
         [HttpGet]
-        public IActionResult Payment()
+        public IActionResult Payment(int orderId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return RedirectToAction("Login", "Account");
-
+           
             // 1️⃣ Find the pending order for this user
             var order = _db.Orders
                 .Include(o => o.OrderItems)
-                .FirstOrDefault(o => o.UserId == userId && o.Status == "Pending");
+                .FirstOrDefault(o => o.Id == orderId && o.UserId == userId);
+               // .FirstOrDefault(o => o.UserId == userId && o.Status == "Pending");
 
             if (order == null)
-                return RedirectToAction("Cart");
+                return RedirectToAction("Index");
 
             // 2️⃣ Find delivery info for this order
             var deliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.OrderId == order.Id);
@@ -196,64 +196,136 @@ namespace FoodHub.Areas.Customer.Controllers
             return View(viewModel);
         }
       
+        // [HttpPost]
+        // public IActionResult Payment(PaymentViewModel vm)
+        // {
+        //     if (!ModelState.IsValid)
+        //         return View(vm);
+
+        //     var cartJson = HttpContext.Session.GetString("CheckoutCart");
+        //     var cart = string.IsNullOrEmpty(cartJson)
+        //         ? new List<CartItemViewModel>()
+        //         : System.Text.Json.JsonSerializer.Deserialize<List<CartItemViewModel>>(cartJson);
+
+        //     var deliveryJson = TempData["DeliveryInfo"] as string ?? "{}";
+        //     var deliveryInfoVm = System.Text.Json.JsonSerializer.Deserialize<DeliveryInfoViewModel>(deliveryJson);
+
+        //     if (cart == null || cart.Count == 0 || deliveryInfoVm == null)
+        //         return RedirectToAction("Index");
+
+            
+        //     // 💳 Determine payment method
+        //     string paymentMethod = Request.Form["PaymentMethod"];
+        //     if (string.IsNullOrEmpty(paymentMethod))
+        //         paymentMethod = "Card"; // default fallback
+
+        //     string transactionId = "Not Required";
+        //     if (paymentMethod == "Card")        // ⚙️ Simulate Transaction ID
+        //         transactionId = $"TRX_{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+
+        //         // 💰 Log before creating payment record
+        //         Console.WriteLine($"[Payment Debug] OrderId: {vm?.Order?.Id}, Amount: {vm?.Order?.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
+
+            
+        //     // 💰 Create payment record
+        //     var payment = new Payment
+        //     {
+        //         OrderId = vm.Order!.Id, // Use the Order from the ViewModel
+        //         PaymentMethod = paymentMethod,
+        //         TransactionId = transactionId,
+        //         Amount = vm.Order.TotalAmount,
+        //         PaymentStatus = paymentMethod == "Card" ? "Success" : "Pending",
+        //         CreatedAt = DateTime.Now
+        //     };
+
+        //             _db.Payments.Add(payment);
+            
+        //             // ✅ Update order status to Completed
+        //             var order = _db.Orders.FirstOrDefault(o => o.Id == vm.Order.Id);
+        //             if (order != null)
+        //             {
+        //                 order.Status = "Completed";
+        //                 _db.Orders.Update(order);
+        //             }
+
+
+        //             _db.SaveChanges();
+
+
+        //     return RedirectToAction("Success", new { orderId = vm.Order.Id });
+        // }
+
         [HttpPost]
-        public IActionResult Payment(PaymentViewModel vm)
-        {
-            if (!ModelState.IsValid)
-                return View(vm);
+public IActionResult Payment(PaymentViewModel vm)
+{
+    if (!ModelState.IsValid)
+        return View(vm);
 
-            var cartJson = HttpContext.Session.GetString("CheckoutCart");
-            var cart = string.IsNullOrEmpty(cartJson)
-                ? new List<CartItemViewModel>()
-                : System.Text.Json.JsonSerializer.Deserialize<List<CartItemViewModel>>(cartJson);
+    // 🧾 1️⃣ Load Order directly from DB using the OrderId from the form
+    var order = _db.Orders
+        .Include(o => o.OrderItems)
+        .FirstOrDefault(o => o.Id == vm.Order.Id);
 
-            var deliveryJson = TempData["DeliveryInfo"] as string ?? "{}";
-            var deliveryInfoVm = System.Text.Json.JsonSerializer.Deserialize<DeliveryInfoViewModel>(deliveryJson);
+    if (order == null)
+    {
+        Console.WriteLine("[Payment Error] Order not found.");
+        return RedirectToAction("Index", "Checkout");
+    }
 
-            if (cart == null || cart.Count == 0 || deliveryInfoVm == null)
-                return RedirectToAction("Index");
+    // 🚚 2️⃣ Ensure delivery info exists
+    var deliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.OrderId == order.Id);
+    if (deliveryInfo == null)
+    {
+        Console.WriteLine("[Payment Error] Delivery info missing.");
+        return RedirectToAction("DeliveryInfo", new { orderId = order.Id });
+    }
 
-            
-            // 💳 Determine payment method
-            string paymentMethod = Request.Form["PaymentMethod"];
-            if (string.IsNullOrEmpty(paymentMethod))
-                paymentMethod = "Card"; // default fallback
+    // 💳 3️⃣ Determine payment method (from hidden field)
+    string paymentMethod = Request.Form["PaymentMethod"];
+    if (string.IsNullOrEmpty(paymentMethod))
+        paymentMethod = "Card"; // fallback to card
 
-            string transactionId = "Not Required";
-            if (paymentMethod == "Card")        // ⚙️ Simulate Transaction ID
-                transactionId = $"TRX_{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+    // 🧾 4️⃣ Simulate Transaction ID (for card payments)
+    string transactionId = paymentMethod == "Card"
+        ? $"TRX_{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
+        : "Not Required";
 
-                // 💰 Log before creating payment record
-                Console.WriteLine($"[Payment Debug] OrderId: {vm?.Order?.Id}, Amount: {vm?.Order?.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
+    Console.WriteLine($"[Payment Debug] OrderId: {order.Id}, Amount: {order.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
 
-            
-            // 💰 Create payment record
-            var payment = new Payment
-            {
-                OrderId = vm.Order!.Id, // Use the Order from the ViewModel
-                PaymentMethod = paymentMethod,
-                TransactionId = transactionId,
-                Amount = vm.Order.TotalAmount,
-                PaymentStatus = paymentMethod == "Card" ? "Success" : "Pending",
-                CreatedAt = DateTime.Now
-            };
+    // 💰 5️⃣ Create and save payment record
+    var payment = new Payment
+    {
+        OrderId = order.Id,
+        PaymentMethod = paymentMethod,
+        TransactionId = transactionId,
+        Amount = order.TotalAmount,
+        PaymentStatus = paymentMethod == "Card" ? "Success" : "Pending",
+        CreatedAt = DateTime.Now
+    };
 
-                    _db.Payments.Add(payment);
-            
-                    // ✅ Update order status to Completed
-                    var order = _db.Orders.FirstOrDefault(o => o.Id == vm.Order.Id);
-                    if (order != null)
-                    {
-                        order.Status = "Completed";
-                        _db.Orders.Update(order);
-                    }
+    _db.Payments.Add(payment);
 
+    // 🟢 6️⃣ Update order status
+    order.Status = "Completed";
+    _db.Orders.Update(order);
 
-                    _db.SaveChanges();
+    // 🧹 7️⃣ Mark cart as inactive (if applicable)
+    var cart = _db.Carts.FirstOrDefault(c => c.UserId == order.UserId && c.Status == "Active");
+    if (cart != null)
+    {
+        cart.Status = "Inactive";
+        _db.Carts.Update(cart);
+    }
 
+    // 💾 8️⃣ Save all changes
+    _db.SaveChanges();
 
-            return RedirectToAction("Success", new { orderId = vm.Order.Id });
-        }
+    // 🧼 9️⃣ Clear checkout session completely
+    HttpContext.Session.Remove("CheckoutCart");
+
+    // ✅ 10️⃣ Redirect to success page
+    return RedirectToAction("Success", new { orderId = order.Id });
+}
 
         // ✅ Step 4: Success Page
         public IActionResult Success(int orderId)

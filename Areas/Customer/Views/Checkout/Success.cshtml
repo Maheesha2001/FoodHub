@@ -1,12 +1,35 @@
 @model dynamic
 @{
     ViewData["Title"] = "Order Successful";
+    Layout = "../_Shared/_SharedLayout.cshtml";
 }
 
-<h2>Thank you for your order!</h2>
+<div class="success-page">
+    <div>
+        <h2 class="mb-3">Thank you for your order!</h2>
+        <p>Order ID: @Model.Id</p>
+        <p>Total Amount: $@Model.TotalAmount</p>
+        <p>Placed on: @Model.CreatedAt</p>
 
-<p>Order ID: @Model.Id</p>
-<p>Total Amount: $@Model.TotalAmount</p>
-<p>Placed on: @Model.CreatedAt</p>
+        <div class="mt-4">
+            <a class="btn btn-primary me-2" href="/">Back to Home</a>
+            <a class="btn text-dark" href="#" style="background-color: #ffc107; border-color: #ffc107;">
+                Track Order
+            </a>
+        </div>
+    </div>
+</div>
 
-<a class="btn btn-primary" href="/">Back to Home</a>
+@section Styles {
+    <style>
+        /* Center success content and keep footer visible */
+        .success-page {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: calc(100vh - 112px); /* Footer space (auto-adjusts if footer grows) */
+        }
+    </style>
+}

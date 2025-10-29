@@ -28,6 +28,15 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<FoodHubContext>();
 
+// ✅ Configure cookie authentication redirect behavior
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login"; // 🔒 redirect unauthenticated users here
+    options.AccessDeniedPath = "/Account/AccessDenied"; // optional: for role-based denial
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    options.SlidingExpiration = true;
+});
+
 // ✅ Session
 builder.Services.AddDistributedMemoryCache(); // stores session in memory
 builder.Services.AddSession(options =>
@@ -70,9 +79,10 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession();
+
 // Redirect /Admin → /Admin/Dashboard
 app.MapGet("/Admin", context =>
 {

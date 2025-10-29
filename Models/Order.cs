@@ -19,6 +19,7 @@ namespace FoodHub.Models
         // Navigation
         public ICollection<OrderItem>? OrderItems { get; set; }
         public DeliveryInfo? DeliveryInfo { get; set; }
+        public virtual Payment? Payment { get; set; }
     }
 
 
