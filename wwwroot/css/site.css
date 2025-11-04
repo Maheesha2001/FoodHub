@@ -27,6 +27,12 @@ html {
   min-height: 100%;
 }
 
+.nav-link {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0.25rem !important; /* optional */
+    padding-right: 0.25rem !important;
+}
 
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

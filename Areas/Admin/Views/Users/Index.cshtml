@@ -1,0 +1,47 @@
+@model IEnumerable<FoodHub.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Manage Users";
+   Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4 fw-bold text-warning">User Management</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">No users found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Created</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.PhoneNumber</td>
+                            <td>@user.CreatedAt.ToString("dd-MMM-yyyy")</td>
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-primary">View</a>
+                                <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

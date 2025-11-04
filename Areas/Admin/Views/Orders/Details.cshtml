@@ -1,0 +1,106 @@
+@model FoodHub.Models.Order
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold text-warning">Order #@Model.Id</h2>
+
+    <!-- Customer Info -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Customer Information</h5>
+            <p><strong>Name:</strong> @Model.User?.FullName</p>
+            <p><strong>Email:</strong> @Model.User?.Email</p>
+        </div>
+    </div>
+
+    <!-- 🏠 Delivery Details -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Delivery Details</h5>
+
+            @if (Model.DeliveryInfo != null)
+            {
+                <p><strong>Recipient Name:</strong> @Model.DeliveryInfo.Name</p>
+                <p><strong>Email:</strong> @Model.DeliveryInfo.Email</p>
+                <p><strong>Phone:</strong> @Model.DeliveryInfo.Phone</p>
+                <p><strong>Address:</strong> @Model.DeliveryInfo.Address</p>
+
+                @if (!string.IsNullOrWhiteSpace(Model.DeliveryInfo.DeliveryNotes))
+                {
+                    <p><strong>Notes:</strong> @Model.DeliveryInfo.DeliveryNotes</p>
+                }
+            }
+            else
+            {
+                <p class="text-muted fst-italic">No delivery information available for this order.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Order Summary</h5>
+            <p><strong>Total:</strong> Rs. @Model.TotalAmount.ToString("N2")</p>
+            <p><strong>Status:</strong> @Model.Status</p>
+
+            <p><strong>Payment Status:</strong>
+                <span class="badge 
+                    @(Model.Payment != null && 
+                      (Model.Payment.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase) ||
+                       Model.Payment.PaymentStatus.Equals("Success", StringComparison.OrdinalIgnoreCase))
+                       ? "bg-success"
+                       : "bg-warning text-dark")">
+                    @(Model.Payment == null ? "Pending" : Model.Payment.PaymentStatus)
+                </span>
+            </p>
+
+            <p><strong>Payment Method:</strong> @Model.Payment?.PaymentMethod</p>
+            <p><strong>Transaction ID:</strong> @Model.Payment?.TransactionId</p>
+            <p><strong>Placed On:</strong> @Model.CreatedAt.ToString("dd-MMM-yyyy hh:mm tt")</p>
+        </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Items Ordered</h5>
+
+            @if (Model.OrderItems != null && Model.OrderItems.Any())
+            {
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product Type</th>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ProductType</td>
+                                <td>@item.ProductName</td>
+                                <td>@item.Quantity</td>
+                                <td>Rs. @item.UnitPrice.ToString("N2")</td>
+                                <td>Rs. @item.TotalPrice.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>No items found for this order.</p>
+            }
+        </div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-secondary">Back to Orders</a>
+</div>
