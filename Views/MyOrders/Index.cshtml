@@ -3,7 +3,8 @@
     ViewData["Title"] = "My Orders";
 }
 
-<div class="container mt-5">
+<div class="customerOrderhistoryMain">
+    <div>
     <h2 class="mb-4 text-center fw-bold">My Orders</h2>
 
     @if (!Model.Any())
@@ -90,7 +91,24 @@
             </table>
         </div>
     }
+    </div>
 </div>
+
+
+@section Styles {
+    <style>
+        /* Center success content and keep footer visible */
+        .customerOrderhistoryMain {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: calc(100vh - 112px); /* Footer space (auto-adjusts if footer grows) */
+            padding-bottom: 35px;
+        }
+    </style>
+}
 
 @section Scripts {
     <script>

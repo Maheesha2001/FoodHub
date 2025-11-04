@@ -52,7 +52,10 @@
 <script>
  const getCartUrl = '@Url.Action("GetCartItems", "Cart", new { area = "" })';
 const updateQtyUrl = '@Url.Action("UpdateItemQuantity", "Cart", new { area = "" })';
-const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
+//const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
+//const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
+const removeItemUrl = '@Url.Content("~/Cart/RemoveItem")';
+
 const saveCheckoutUrl = '@Url.Action("SaveCheckoutCart", "Cart", new { area = "" })';
 @* const isFrozen = @((TempData["FrozenOrderId"] != null) ? "true" : "false"); *@
 
@@ -86,21 +89,7 @@ async function loadCart() {
         let html = "";
         let total = 0;
 
-        @* data.items.forEach((item) => {
-            const lineTotal = item.price * item.quantity;
-            total += lineTotal;
-
-            html += `
-                <tr data-id="${item.id}" data-type="${item.type}">
-                    <td>${item.name}</td>
-                    <td>${item.type}</td>
-                    <td><input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" /></td>
-                    <td class="unit-price">${item.price.toFixed(2)}</td>
-                    <td class="line-total">${lineTotal.toFixed(2)}</td>
-                    <td><button type="button" class="btn btn-sm btn-danger remove-item">X</button></td>
-                </tr>`;
-        }); *@
-
+        
         data.items.forEach((item) => {
     const lineTotal = item.price * item.quantity;
     total += lineTotal;
@@ -114,7 +103,18 @@ let removeBtn = "";
         removeBtn = "";
         console.log("Correct is frozen");
     } else {
-        qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" />`;
+       // qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" />`;
+          qtyInput = `
+        <div class="d-flex align-items-center qty-control" style="gap:5px;">
+            <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="dec" data-id="${item.id}" data-type="${item.type}">
+                <i class="bi bi-dash"></i>
+            </button>
+            <input type="number" class="form-control text-center quantity-input" 
+                value="${item.quantity}" min="1" style="width:70px;" readonly />
+            <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="inc" data-id="${item.id}" data-type="${item.type}">
+                <i class="bi bi-plus"></i>
+            </button>
+        </div>`;
         removeBtn = `<button type="button" class="btn btn-sm btn-danger remove-item">X</button>`;
         console.log("WRONG is frozen");
     }
@@ -140,44 +140,7 @@ let removeBtn = "";
     }
 }
 
-@* function attachEvents() {
-    document.querySelectorAll('.quantity-input').forEach(input => {
-        input.addEventListener('change', async function () {
-            const row = input.closest('tr');
-            const id = row.dataset.id;
-            const type = row.dataset.type;
-            const qty = parseInt(input.value);
 
-            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, {
-                method: 'POST'
-            });
-
-            if (!res.ok) return console.error('Failed to update quantity:', res.status);
-            const data = await res.json();
-            if (data.success) {
-                const price = parseFloat(row.querySelector('.unit-price').innerText);
-                row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
-                updateTotal();
-            }
-        });
-    });
-
-    document.querySelectorAll('.remove-item').forEach(btn => {
-        btn.addEventListener('click', async function () {
-            const row = btn.closest('tr');
-            const id = row.dataset.id;
-            const type = row.dataset.type;
-
-            const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
-            if (!res.ok) return console.error('Failed to remove item:', res.status);
-            const data = await res.json();
-            if (data.success) {
-                row.remove();
-                updateTotal();
-            }
-        });
-    });
-} *@
 
 function attachEvents() {
     if (isFrozen) {
@@ -212,6 +175,8 @@ function attachEvents() {
             const id = row.dataset.id;
             const type = row.dataset.type;
 
+            //const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+           // const res = await fetch(removeItemUrl + `?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
             const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
             if (!res.ok) return console.error('Failed to remove item:', res.status);
             const data = await res.json();
@@ -221,87 +186,39 @@ function attachEvents() {
             }
         });
     });
-}
 
+    // Handle up/down buttons for quantity
+document.querySelectorAll('.qty-btn').forEach(btn => {
+    btn.addEventListener('click', async function () {
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        const type = btn.dataset.type;
 
-@* 
-async function tryRestoreLocalCartIfNeeded() {
-    try {
-        // 1) Read local cart
-        const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-        if (!localCart || localCart.length === 0) {
-            console.log("No local cart to restore.");
-            await loadCart(); // just load server cart
-            return;
-        }
-        console.log("Local cart exists (will attempt restore):", localCart);
+        const row = btn.closest('tr');
+        const input = row.querySelector('.quantity-input');
+        let qty = parseInt(input.value);
 
-        // 2) Ask server for its current cart
-        const serverRes = await fetch(getCartUrl);
-        let serverJson = null;
+        if (action === "inc") qty++;
+        if (action === "dec" && qty > 1) qty--;
+
+        input.value = qty;
+
+        // Update UI totals
+        const price = parseFloat(row.querySelector('.unit-price').innerText);
+        row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
+        updateTotal();
+
+        // Update server
         try {
-            serverJson = await serverRes.json();
-        } catch (e) {
-            console.warn("GetCartItems did not return JSON:", e);
-            serverJson = { items: [] };
+            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+            if (!res.ok) console.error("Failed to update quantity:", res.status);
+        } catch (err) {
+            console.error("Error updating quantity:", err);
         }
+    });
+});
 
-        const serverItems = serverJson?.items || [];
-        if (serverItems.length > 0) {
-            console.log("Server cart already contains items — merging strategy: we'll POST local items to merge.");
-            // continue to merge (we still post so server-side merging code can combine)
-        } else {
-            console.log("Server cart is empty — will POST local cart to SaveCheckoutCart.");
-        }
-
-        // 3) POST local cart to SaveCheckoutCart (server will merge)
-        const payload = localCart.map(i => ({
-            // use lowercase keys if your ViewModel has JsonPropertyName for lowercase
-            id: i.id?.toString?.() ?? String(i.id),
-            name: i.name,
-            type: i.type,
-            price: i.price,
-            quantity: i.quantity
-        }));
-
-        console.log("Posting payload to SaveCheckoutCart:", payload);
-
-        const postRes = await fetch(saveCheckoutUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-                // optional: anti-forgery token header if you use one. If you do, set header here.
-                // "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-            },
-            body: JSON.stringify(payload),
-            credentials: "same-origin" // ensure cookies are sent
-        });
-
-        // diagnose non-OK responses by printing body
-        const respText = await postRes.text();
-        console.log("SaveCheckoutCart response status:", postRes.status, "body:", respText);
-
-        if (postRes.ok) {
-            console.log("Cart restored/merged on server successfully.");
-            localStorage.removeItem("cart");          // clear local cart (optional)
-            await loadCart();                         // reload UI with server cart
-        } else if (postRes.status === 401) {
-            console.warn("SaveCheckoutCart returned 401 — user probably not authenticated yet. Redirect to login.");
-            // redirect to login and let restore happen after login
-            window.location.href = "/Account/Login?returnUrl=/Customer/Checkout/Index";
-        } else if (postRes.status === 400) {
-            console.warn("SaveCheckoutCart returned 400. Response text:", respText);
-            // show message or attempt to inspect respText
-            await loadCart(); // show whatever server has
-        } else {
-            console.error("SaveCheckoutCart failed:", postRes.status, respText);
-            await loadCart();
-        }
-    } catch (err) {
-        console.error("Error during cart restore attempt:", err);
-        await loadCart(); // fallback to display server cart anyway
-    }
-} *@
+}
 
 async function tryRestoreLocalCartIfNeeded() {
     try {
@@ -373,36 +290,6 @@ function updateTotal() {
     });
     document.getElementById('checkout-cart-total').innerText = total.toFixed(2);
 }
-
-// ✅ Restore local cart if user just logged in
-@* document.addEventListener("DOMContentLoaded", async () => {
-      await tryRestoreLocalCartIfNeeded();
-    const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    if (localCart.length > 0) {
-        try {
-            const res = await fetch(saveCheckoutUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                },
-                body: JSON.stringify(localCart)
-            });
-
-            if (res.ok) {
-                localStorage.removeItem("cart");
-                await loadCart(); // ✅ Merge shown in table
-            } else {
-                console.error("Failed to restore cart after login.");
-            }
-        } catch (err) {
-            console.error("Error restoring cart:", err);
-        }
-    } else {
-        await loadCart();
-    }
-}); *@
-
 
 
 document.addEventListener("DOMContentLoaded", async () => {

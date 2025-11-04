@@ -1,4 +1,6 @@
     @* Cart Sidebar *@
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
     <div id="cartSidebar" class="cart-sidebar">
         <div class="cart-header d-flex justify-content-between align-items-center">
             <h5>Your Cart</h5>
@@ -34,6 +36,21 @@
             border-bottom: 1px solid #ddd;
         }
         .cart-footer { border-top: 1px solid #ddd; margin-top: auto; }
+
+        .cart-item-info .btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.cart-item-info span {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 500;
+}
+
     </style>
 @section Scripts {
     <script src="~/js/cart.js"></script>

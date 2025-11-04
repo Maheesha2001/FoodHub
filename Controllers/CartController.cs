@@ -258,6 +258,7 @@ namespace FoodHub.Controllers
         public IActionResult UpdateItemQuantity(string productId, int quantity, string type)
 {
 
+            Console.WriteLine($"[UpdateItemQuantity] ProductId: {productId}, Type: {type}, Qty: {quantity}");
 
     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     if (userId == null) return Unauthorized();
@@ -284,7 +285,7 @@ namespace FoodHub.Controllers
 
             var cart = _db.Carts
                 .Include(c => c.Items)
-                .FirstOrDefault(c => c.UserId == userId);
+                .FirstOrDefault(c => c.UserId == userId  && c.Status == "Active");
 
             if (cart == null)
                 return NotFound();
