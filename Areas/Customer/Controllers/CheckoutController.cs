@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Net;
+using System.Net.Mail;
+
 
 namespace FoodHub.Areas.Customer.Controllers
 {
@@ -195,7 +198,7 @@ namespace FoodHub.Areas.Customer.Controllers
             // 4️⃣ Pass to the view
             return View(viewModel);
         }
-      
+
         // [HttpPost]
         // public IActionResult Payment(PaymentViewModel vm)
         // {
@@ -213,7 +216,7 @@ namespace FoodHub.Areas.Customer.Controllers
         //     if (cart == null || cart.Count == 0 || deliveryInfoVm == null)
         //         return RedirectToAction("Index");
 
-            
+
         //     // 💳 Determine payment method
         //     string paymentMethod = Request.Form["PaymentMethod"];
         //     if (string.IsNullOrEmpty(paymentMethod))
@@ -226,7 +229,7 @@ namespace FoodHub.Areas.Customer.Controllers
         //         // 💰 Log before creating payment record
         //         Console.WriteLine($"[Payment Debug] OrderId: {vm?.Order?.Id}, Amount: {vm?.Order?.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
 
-            
+
         //     // 💰 Create payment record
         //     var payment = new Payment
         //     {
@@ -239,7 +242,7 @@ namespace FoodHub.Areas.Customer.Controllers
         //     };
 
         //             _db.Payments.Add(payment);
-            
+
         //             // ✅ Update order status to Completed
         //             var order = _db.Orders.FirstOrDefault(o => o.Id == vm.Order.Id);
         //             if (order != null)
@@ -256,81 +259,252 @@ namespace FoodHub.Areas.Customer.Controllers
         // }
 
         [HttpPost]
-public IActionResult Payment(PaymentViewModel vm)
+        public IActionResult Payment(PaymentViewModel vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            // 🧾 1️⃣ Load Order directly from DB using the OrderId from the form
+            var order = _db.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefault(o => o.Id == vm.Order.Id);
+
+            if (order == null)
+            {
+                Console.WriteLine("[Payment Error] Order not found.");
+                return RedirectToAction("Index", "Checkout");
+            }
+
+            // 🚚 2️⃣ Ensure delivery info exists
+            var deliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.OrderId == order.Id);
+            if (deliveryInfo == null)
+            {
+                Console.WriteLine("[Payment Error] Delivery info missing.");
+                return RedirectToAction("DeliveryInfo", new { orderId = order.Id });
+            }
+
+            // 💳 3️⃣ Determine payment method (from hidden field)
+            string paymentMethod = Request.Form["PaymentMethod"];
+            if (string.IsNullOrEmpty(paymentMethod))
+                paymentMethod = "Card"; // fallback to card
+
+            // 🧾 4️⃣ Simulate Transaction ID (for card payments)
+            string transactionId = paymentMethod == "Card"
+                ? $"TRX_{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
+                : "Not Required";
+
+            Console.WriteLine($"[Payment Debug] OrderId: {order.Id}, Amount: {order.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
+
+            // 💰 5️⃣ Create and save payment record
+            var payment = new Payment
+            {
+                OrderId = order.Id,
+                PaymentMethod = paymentMethod,
+                TransactionId = transactionId,
+                Amount = order.TotalAmount,
+                PaymentStatus = paymentMethod == "Card" ? "Success" : "Pending",
+                CreatedAt = DateTime.Now
+            };
+
+            _db.Payments.Add(payment);
+
+            // 🟢 6️⃣ Update order status
+            order.Status = "Completed";
+            _db.Orders.Update(order);
+
+            // 🧹 7️⃣ Mark cart as inactive (if applicable)
+            var cart = _db.Carts.FirstOrDefault(c => c.UserId == order.UserId && c.Status == "Active");
+            if (cart != null)
+            {
+                cart.Status = "Inactive";
+                _db.Carts.Update(cart);
+            }
+
+            // 💾 8️⃣ Save all changes
+            _db.SaveChanges();
+
+            // 🧼 9️⃣ Clear checkout session completely
+            HttpContext.Session.Remove("CheckoutCart");
+
+            // Safely get the email and name from DeliveryInfo first, otherwise fallback to User
+            var customerEmail = !string.IsNullOrEmpty(order.DeliveryInfo?.Email)
+                ? order.DeliveryInfo.Email
+                : order.User?.Email ?? string.Empty;
+
+            var customerName = !string.IsNullOrEmpty(order.DeliveryInfo?.Name)
+                ? order.DeliveryInfo.Name
+                : order.User?.FullName ?? "Valued Customer";
+
+            // Send the email
+            SendOrderConfirmationEmail(customerEmail, customerName, order);
+
+            // ✅ 10️⃣ Redirect to success page
+            return RedirectToAction("Success", new { orderId = order.Id });
+        }
+private void SendOrderConfirmationEmail(string toEmail, string customerName, Order order)
 {
-    if (!ModelState.IsValid)
-        return View(vm);
-
-    // 🧾 1️⃣ Load Order directly from DB using the OrderId from the form
-    var order = _db.Orders
-        .Include(o => o.OrderItems)
-        .FirstOrDefault(o => o.Id == vm.Order.Id);
-
-    if (order == null)
+    try
     {
-        Console.WriteLine("[Payment Error] Order not found.");
-        return RedirectToAction("Index", "Checkout");
+        string fromEmail = "foodhubwork2025@gmail.com"; // sender email
+        string fromPassword = "vptl evpa tvte udke";    // app-specific password
+        string subject = $"Order Confirmation - Order #{order.Id}";
+
+        // ✅ Local Admin Order Details URL
+        string orderUrl = $"http://localhost:5187/MyOrders/Details/{order.Id}";
+
+
+        // ✅ Styled Email Body
+        string body = $@"
+        <html>
+        <body style='font-family: Arial, sans-serif; background-color:#f9f9f9; padding: 30px;'>
+            <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; 
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden;'>
+                <div style='background-color:#F39C12; padding:20px; text-align:center; color:white;'>
+                    <h2 style='margin:0;'>FoodHub</h2>
+                    <p style='margin:0; font-size:14px;'>Order Confirmation</p>
+                </div>
+
+                <div style='padding: 25px 30px; color: #333;'>
+                    <h3 style='margin-top:0;'>Hi {customerName},</h3>
+                    <p>Thank you for your order! We're preparing your food with care. 🍕</p>
+
+                    <h4 style='margin-top:25px; color:#F39C12;'>🧾 Order Summary:</h4>
+                    <table style='width:100%; border-collapse: collapse; font-size: 15px;'>
+                        <tr>
+                            <td style='padding: 8px 0;'><strong>Order ID:</strong></td>
+                            <td>#{order.Id}</td>
+                        </tr>
+                        <tr style='background-color:#f6f6f6;'>
+                            <td style='padding: 8px 0;'><strong>Total Amount:</strong></td>
+                            <td>Rs. {order.TotalAmount:N2}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 8px 0;'><strong>Status:</strong></td>
+                            <td>{order.Status}</td>
+                        </tr>
+                        <tr style='background-color:#f6f6f6;'>
+                            <td style='padding: 8px 0;'><strong>Payment Status:</strong></td>
+                            <td>{order.Payment?.PaymentStatus ?? "Pending"}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 8px 0;'><strong>Order Date:</strong></td>
+                            <td>{order.CreatedAt:dd-MMM-yyyy hh:mm tt}</td>
+                        </tr>
+                    </table>
+
+                    <div style='text-align:center; margin: 30px 0;'>
+                        <a href='{orderUrl}'
+                           style='background-color:#F39C12; color:white; padding:14px 28px; 
+                                  text-decoration:none; border-radius:8px; font-weight:bold;
+                                  display:inline-block; box-shadow:0 3px 6px rgba(0,0,0,0.2);'>
+                            🔍 View Your Order
+                        </a>
+                    </div>
+
+                    <p>Your order is being processed. We'll notify you when it’s on its way! 🚚</p>
+
+                    <p style='font-size:14px; color:#555; margin-top:25px;'>
+                        Warm regards,<br/>
+                        <strong>The FoodHub Team</strong>
+                    </p>
+                </div>
+
+                <div style='background-color:#f1f1f1; text-align:center; padding:15px; font-size:12px; color:#888;'>
+                    © {DateTime.Now.Year} FoodHub. All rights reserved.
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+        // ✅ SMTP client setup
+        var smtpClient = new SmtpClient("smtp.gmail.com")
+        {
+            Port = 587,
+            Credentials = new NetworkCredential(fromEmail, fromPassword),
+            EnableSsl = true,
+        };
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(fromEmail, "FoodHub"),
+            Subject = subject,
+            Body = body,
+            IsBodyHtml = true,
+        };
+
+        mailMessage.To.Add(toEmail);
+
+        smtpClient.Send(mailMessage);
+        Console.WriteLine($"✅ Order confirmation email sent to {toEmail}");
     }
-
-    // 🚚 2️⃣ Ensure delivery info exists
-    var deliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.OrderId == order.Id);
-    if (deliveryInfo == null)
+    catch (Exception ex)
     {
-        Console.WriteLine("[Payment Error] Delivery info missing.");
-        return RedirectToAction("DeliveryInfo", new { orderId = order.Id });
+        Console.WriteLine($"❌ Email sending failed: {ex.Message}");
     }
-
-    // 💳 3️⃣ Determine payment method (from hidden field)
-    string paymentMethod = Request.Form["PaymentMethod"];
-    if (string.IsNullOrEmpty(paymentMethod))
-        paymentMethod = "Card"; // fallback to card
-
-    // 🧾 4️⃣ Simulate Transaction ID (for card payments)
-    string transactionId = paymentMethod == "Card"
-        ? $"TRX_{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
-        : "Not Required";
-
-    Console.WriteLine($"[Payment Debug] OrderId: {order.Id}, Amount: {order.TotalAmount}, Method: {paymentMethod}, Transaction: {transactionId}");
-
-    // 💰 5️⃣ Create and save payment record
-    var payment = new Payment
-    {
-        OrderId = order.Id,
-        PaymentMethod = paymentMethod,
-        TransactionId = transactionId,
-        Amount = order.TotalAmount,
-        PaymentStatus = paymentMethod == "Card" ? "Success" : "Pending",
-        CreatedAt = DateTime.Now
-    };
-
-    _db.Payments.Add(payment);
-
-    // 🟢 6️⃣ Update order status
-    order.Status = "Completed";
-    _db.Orders.Update(order);
-
-    // 🧹 7️⃣ Mark cart as inactive (if applicable)
-    var cart = _db.Carts.FirstOrDefault(c => c.UserId == order.UserId && c.Status == "Active");
-    if (cart != null)
-    {
-        cart.Status = "Inactive";
-        _db.Carts.Update(cart);
-    }
-
-    // 💾 8️⃣ Save all changes
-    _db.SaveChanges();
-
-    // 🧼 9️⃣ Clear checkout session completely
-    HttpContext.Session.Remove("CheckoutCart");
-
-    // ✅ 10️⃣ Redirect to success page
-    return RedirectToAction("Success", new { orderId = order.Id });
 }
+
+
+        // private void SendOrderConfirmationEmail(string toEmail, string customerName, Order order)
+        // {
+        //     try
+        //     {
+        //         string fromEmail = "foodhubwork2025@gmail.com"; // replace with your sender email
+        //         string fromPassword = "vptl evpa tvte udke";     // app-specific password (not your main password)
+        //         string subject = $"Order Confirmation - Order #{order.Id}";
+
+        //         // ✅ Build message body
+        //         string body = $@"
+        //             <h2>Thank you for your order, {customerName}!</h2>
+        //             <p>Your order has been successfully placed and is being processed.</p>
+
+        //             <h4>Order Details:</h4>
+        //             <ul>
+        //                 <li><strong>Order ID:</strong> {order.Id}</li>
+        //                 <li><strong>Total Amount:</strong> Rs. {order.TotalAmount:N2}</li>
+        //                 <li><strong>Status:</strong> {order.Status}</li>
+        //                 <li><strong>Payment Status:</strong> {order.Payment?.PaymentStatus ?? "Pending"}</li>
+        //                 <li><strong>Order Date:</strong> {order.CreatedAt:dd-MMM-yyyy hh:mm tt}</li>
+        //             </ul>
+
+        //             <p>We'll notify you once your order is on its way! 🚚</p>
+        //             <br/>
+        //             <p>– The FoodHub Team</p>
+        //         ";
+
+        //         // ✅ SMTP client setup
+        //         var smtpClient = new SmtpClient("smtp.gmail.com")
+        //         {
+        //             Port = 587,
+        //             Credentials = new NetworkCredential(fromEmail, fromPassword),
+        //             EnableSsl = true,
+        //         };
+
+        //         var mailMessage = new MailMessage
+        //         {
+        //             From = new MailAddress(fromEmail, "FoodHub"),
+        //             Subject = subject,
+        //             Body = body,
+        //             IsBodyHtml = true,
+        //         };
+
+        //         mailMessage.To.Add(toEmail);
+
+        //         smtpClient.Send(mailMessage);
+        //         Console.WriteLine($"✅ Order confirmation email sent to {toEmail}");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"❌ Email sending failed: {ex.Message}");
+        //     }
+        // }
+
+        //==================================================================================================================
 
         // ✅ Step 4: Success Page
         public IActionResult Success(int orderId)
         {
-             HttpContext.Session.Clear();
+            HttpContext.Session.Clear();
             TempData.Clear();
 
             var order = _db.Orders

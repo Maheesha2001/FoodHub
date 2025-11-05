@@ -71,9 +71,11 @@
                                 }
                                 else
                                 {
-                                    <button class="btn btn-sm btn-outline-secondary view-btn" data-orderid="@order.Id">
-                                        <i class="bi bi-eye"></i> View
-                                    </button>
+                                   <a href="@Url.Action("Details", "MyOrders", new { id = order.Id })" 
+                                        class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+
                                 }
                             </td>
                         </tr>

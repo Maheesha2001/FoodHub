@@ -1,0 +1,157 @@
+@model FoodHub.Models.Order
+@{
+    ViewData["Title"] = $"Order Details - #{Model.Id}";
+}
+
+<div class="order-details-container container my-5 p-4 shadow-sm rounded bg-white">
+    <h2 class="fw-bold mb-4 text-center text-warning">Order #@Model.Id</h2>
+
+    <!-- Order Summary + User Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Order Summary</h5>
+                    <p><strong>Date:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                    <p><strong>Status:</strong>
+                        @if (Model.Status == "Completed")
+                        {
+                            <span class="badge bg-success">Completed</span>
+                        }
+                        else if (Model.Status == "Pending")
+                        {
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@Model.Status</span>
+                        }
+                    </p>
+                    <p><strong>Payment Status:</strong>
+                        @if (Model.Payment != null && 
+                            (Model.Payment.PaymentStatus == "Paid" || Model.Payment.PaymentStatus == "Success"))
+                        {
+                            <span class="badge bg-success">Paid</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        }
+                    </p>
+                    <p><strong>Total:</strong> Rs. @Model.TotalAmount.ToString("N2")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User (Customer) Info -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Customer Info</h5>
+                  
+              <p><strong>Name:</strong> @Model.User?.FullName</p>
+            <p><strong>Email:</strong> @Model.User?.Email</p>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Info -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Delivery Info</h5>
+            @if (Model.DeliveryInfo != null)
+            {
+                <p><strong>Name:</strong> @Model.DeliveryInfo.Name</p>
+                <p><strong>Phone:</strong> @Model.DeliveryInfo.Phone</p>
+                <p><strong>Address:</strong> @Model.DeliveryInfo.Address</p>
+                @if (!string.IsNullOrEmpty(Model.DeliveryInfo.DeliveryNotes))
+                {
+                    <p><strong>Notes:</strong> @Model.DeliveryInfo.DeliveryNotes</p>
+                }
+            }
+            else
+            {
+                <p class="text-muted">No delivery info found.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Order Items</h5>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Item</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td>@item.ProductType</td>
+                                <td>@item.Quantity</td>
+                                <td>Rs. @item.UnitPrice.ToString("N2")</td>
+                                <td>Rs. @((item.UnitPrice * item.Quantity).ToString("N2"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="text-end">Total:</th>
+                            <th>Rs. @Model.TotalAmount.ToString("N2")</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index", "MyOrders")" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-arrow-left"></i> Back to Orders
+        </a>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        body {
+            background-color: #f9f9f9;
+        }
+
+        .order-details-container {
+            max-width: 950px;
+        }
+
+        .card {
+            border-radius: 15px;
+        }
+
+        table th, table td {
+            vertical-align: middle;
+        }
+
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5em 0.8em;
+        }
+
+        .table-dark th {
+            background-color: #343a40 !important;
+        }
+
+        .card-body p {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+}
