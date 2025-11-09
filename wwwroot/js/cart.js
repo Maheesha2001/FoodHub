@@ -244,6 +244,50 @@ document.addEventListener("click", e => {
     if (dec) changeQuantity(dec.dataset.id, dec.dataset.type, -1);
 });
 
+// // ---------------------- CHECKOUT BUTTON ----------------------
+// function attachCheckoutListener() {
+//     const checkoutBtn = document.getElementById('checkoutBtn');
+//     if (!checkoutBtn) return;
+
+//     checkoutBtn.addEventListener('click', async () => {
+//         try {
+//             // Use in-memory cart (already normalized)
+//             const payload = cart.map(i => ({
+//                 id: i.id.toString(),
+//                 name: i.name,
+//                 type: i.type,
+//                 price: i.price,
+//                 quantity: i.quantity
+//             }));
+
+//             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+//             const response = await fetch("/Cart/SaveCheckoutCart", {
+//                 method: "POST",
+//                 headers: {
+//                     "Content-Type": "application/json",
+//                     "RequestVerificationToken": token
+//                 },
+//                 body: JSON.stringify(payload)
+//             });
+
+//             if (response.ok) {
+//                 // Clear local cache and reload from server so DB becomes source of truth
+//                 localStorage.removeItem("cart");
+//                 await loadCart();
+//                 // Redirect to checkout page (protected)
+//                 window.location.href = "/Cart/Checkout";
+//             } else {
+//                 const text = await response.text();
+//                 console.error("Checkout save failed:", response.status, text);
+//                 alert("Error saving your cart. Try again.");
+//             }
+//         } catch (err) {
+//             console.error("Error during checkout:", err);
+//             alert("Error during checkout. Check the console.");
+//         }
+//     });
+// }
 // ---------------------- CHECKOUT BUTTON ----------------------
 function attachCheckoutListener() {
     const checkoutBtn = document.getElementById('checkoutBtn');
@@ -251,7 +295,7 @@ function attachCheckoutListener() {
 
     checkoutBtn.addEventListener('click', async () => {
         try {
-            // Use in-memory cart (already normalized)
+            // Prepare payload from in-memory cart
             const payload = cart.map(i => ({
                 id: i.id.toString(),
                 name: i.name,
@@ -262,6 +306,7 @@ function attachCheckoutListener() {
 
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
+            // Save cart on server
             const response = await fetch("/Cart/SaveCheckoutCart", {
                 method: "POST",
                 headers: {
@@ -272,11 +317,24 @@ function attachCheckoutListener() {
             });
 
             if (response.ok) {
-                // Clear local cache and reload from server so DB becomes source of truth
+                const data = await response.json();
+
+                // Server should return the cart Code
+                const cartCode = data.code;
+                if (!cartCode) {
+                    console.error("Cart code missing in server response.");
+                    alert("Error: cart code not found.");
+                    return;
+                }
+
+                // Clear local storage and reload cart
                 localStorage.removeItem("cart");
                 await loadCart();
-                // Redirect to checkout page (protected)
-                window.location.href = "/Cart/Checkout";
+
+                // Redirect to Cart Checkout page (non-Customer area)
+                //window.location.href = `/Cart/Checkout/${cartCode}`;
+                window.location.href = `/Customer/Checkout/${cartCode}`;
+
             } else {
                 const text = await response.text();
                 console.error("Checkout save failed:", response.status, text);

@@ -22,6 +22,15 @@ namespace FoodHub.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
         
-    
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+
+    modelBuilder.Entity<Order>()
+        .Ignore(o => o.OrderItems)
+        .Ignore(o => o.DeliveryInfo)
+        .Ignore(o => o.Payment);
+}
+
     }
 }

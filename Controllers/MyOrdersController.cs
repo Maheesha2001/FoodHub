@@ -22,41 +22,54 @@ namespace FoodHub.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var orders = _db.Orders
-                .Include(o => o.Payment)
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.CreatedAt)
-                .Select(o => new MyOrderViewModel
-                {
-                    Id = o.Id,
-                    CreatedAt = o.CreatedAt,
-                    TotalAmount = o.TotalAmount,
-                    Status = o.Status,
-                    PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending"
-                })
-                .ToList();
+     .Where(o => o.UserId == userId)
+     .OrderByDescending(o => o.CreatedAt)
+     .ToList();
 
-            return View(orders);
+            // Manually populate Payment and DeliveryInfo
+            foreach (var order in orders)
+            {
+                order.Payment = _db.Payments.FirstOrDefault(p => p.Code == order.Code);
+                order.DeliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.Code == order.Code);
+            }
+
+            // Map to ViewModel
+            var vm = orders.Select(o => new MyOrderViewModel
+            {
+                Id = o.Id,
+                Code = o.Code,
+                CreatedAt = o.CreatedAt,
+                TotalAmount = o.TotalAmount,
+                Status = o.Status,
+                PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Not Available",
+                DeliveryStatus = o.DeliveryInfo != null ? o.DeliveryInfo.DeliveryStatus : "Pending"
+            }).ToList();
+
+            return View(vm);
+
         }
+        
+        public IActionResult Details(string orderCode)
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+        return Unauthorized();
 
-        public IActionResult Details(int id)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+    // Load order by Code
+    var order = _db.Orders.FirstOrDefault(o => o.Code == orderCode && o.UserId == userId);
+    if (order == null)
+        return NotFound();
 
-            var order = _db.Orders
-                .Include(o => o.User)
-                .Include(o => o.OrderItems)
-                .Include(o => o.DeliveryInfo)
-                .Include(o => o.Payment)
-                .FirstOrDefault(o => o.Id == id && o.UserId == userId);
+    // Manually load related data
+    order.OrderItems = _db.OrderItems.Where(oi => oi.Code == order.Code).ToList();
+    order.Payment = _db.Payments.FirstOrDefault(p => p.Code == order.Code);
+    order.DeliveryInfo = _db.DeliveryInfo.FirstOrDefault(d => d.Code == order.Code);
+    order.User = _db.Users.FirstOrDefault(u => u.Id == order.UserId);
 
-            if (order == null)
-                return NotFound();
+    return View(order);
+}
 
-            return View(order);
-        }
-    }
+ }
 }
 
 // using Microsoft.AspNetCore.Mvc;

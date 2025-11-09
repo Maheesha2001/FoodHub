@@ -4,7 +4,7 @@
 }
 
 <div class="order-details-container container my-5 p-4 shadow-sm rounded bg-white">
-    <h2 class="fw-bold mb-4 text-center text-warning">Order #@Model.Id</h2>
+    <h2 class="fw-bold mb-4 text-center text-warning">Order #@Model.Code</h2>
 
     <!-- Order Summary + User Info -->
     <div class="row mb-4">
@@ -13,22 +13,55 @@
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Order Summary</h5>
                     <p><strong>Date:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</p>
-                    <p><strong>Status:</strong>
-                        @if (Model.Status == "Completed")
-                        {
-                            <span class="badge bg-success">Completed</span>
+
+                    <!-- ✅ Unified Status Display -->
+                    <p>
+                        <strong>Status:</strong>
+                        @{
+                            string displayStatus = Model.Status ?? "Unknown";
+                            string badgeClass = "bg-secondary";
+
+                            if (Model.Status == "Pending")
+                            {
+                                displayStatus = "Pending";
+                                badgeClass = "bg-warning text-dark";
+                            }
+                            else if (Model.DeliveryInfo != null)
+                            {
+                                if (Model.DeliveryInfo.DeliveryStatus == "Pending")
+                                {
+                                    displayStatus = "Pending";
+                                    badgeClass = "bg-warning text-dark";
+                                }                            
+                            
+                                else if (Model.DeliveryInfo.DeliveryStatus == "Out for Delivery")
+                                {
+                                    displayStatus = "Out for Delivery";
+                                    badgeClass = "bg-primary";
+                                }
+                                else if (Model.DeliveryInfo.DeliveryStatus == "Delivered")
+                                {
+                                    displayStatus = "Delivered";
+                                    badgeClass = "bg-success";
+                                }
+                                else if (Model.DeliveryInfo.DeliveryStatus == "Cancelled")
+                                {
+                                    displayStatus = "Cancelled";
+                                    badgeClass = "bg-danger";
+                                }
+                            }
+                            else if (Model.Status == "Completed")
+                            {
+                                displayStatus = "Completed";
+                                badgeClass = "bg-success";
+                            }
                         }
-                        else if (Model.Status == "Pending")
-                        {
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">@Model.Status</span>
-                        }
+                        <span class="badge @badgeClass">@displayStatus</span>
                     </p>
+
+                    <!-- Payment -->
                     <p><strong>Payment Status:</strong>
-                        @if (Model.Payment != null && 
+                        @if (Model.Payment != null &&
                             (Model.Payment.PaymentStatus == "Paid" || Model.Payment.PaymentStatus == "Success"))
                         {
                             <span class="badge bg-success">Paid</span>
@@ -38,6 +71,7 @@
                             <span class="badge bg-warning text-dark">Pending</span>
                         }
                     </p>
+
                     <p><strong>Total:</strong> Rs. @Model.TotalAmount.ToString("N2")</p>
                 </div>
             </div>
@@ -48,10 +82,8 @@
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Customer Info</h5>
-                  
-              <p><strong>Name:</strong> @Model.User?.FullName</p>
-            <p><strong>Email:</strong> @Model.User?.Email</p>
-                   
+                    <p><strong>Name:</strong> @Model.User?.FullName</p>
+                    <p><strong>Email:</strong> @Model.User?.Email</p>
                 </div>
             </div>
         </div>
@@ -66,6 +98,7 @@
                 <p><strong>Name:</strong> @Model.DeliveryInfo.Name</p>
                 <p><strong>Phone:</strong> @Model.DeliveryInfo.Phone</p>
                 <p><strong>Address:</strong> @Model.DeliveryInfo.Address</p>
+
                 @if (!string.IsNullOrEmpty(Model.DeliveryInfo.DeliveryNotes))
                 {
                     <p><strong>Notes:</strong> @Model.DeliveryInfo.DeliveryNotes</p>

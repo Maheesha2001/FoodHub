@@ -9,10 +9,7 @@ namespace FoodHub.Models
         [Key]
         public int Id { get; set; }
 
-        // Link to Order
-        [Required]
-        public int OrderId { get; set; }
-
+        public string Code { get; set; }
         [Required]
         public string PaymentMethod { get; set; } = string.Empty;
 
@@ -30,6 +27,6 @@ namespace FoodHub.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Optional navigation property
-        public Order? Order { get; set; }
+       // public Order? Order { get; set; }
     }
 }

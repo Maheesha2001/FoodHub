@@ -223,7 +223,9 @@ footer.custom-footer {
 
 <!-- Card Payment Form -->
 <form id="cardPaymentForm" asp-action="Payment" method="post" style="display:none;">
-      <input type="hidden" name="Order.Id" value="@Model.Order.Id" />
+@Html.AntiForgeryToken()
+<input type="hidden" name="OrderCode" value="@Model.Order.Code" />
+
     <input type="hidden" name="Order.TotalAmount" value="@Model.Order.TotalAmount" />
     <div class="mb-3">
         <label>Card Number</label>
@@ -244,7 +246,9 @@ footer.custom-footer {
 
 <!-- Cash Payment Submission -->
 <form id="cashPaymentForm" asp-action="Payment" method="post">
-  <input type="hidden" name="Order.Id" value="@Model.Order.Id" />
+@Html.AntiForgeryToken()
+  <input type="hidden" name="OrderCode" value="@Model.Order.Code" />
+  
     <input type="hidden" name="Order.TotalAmount" value="@Model.Order.TotalAmount" />
     <input type="hidden" name="PaymentMethod" value="Cash" />
     <button type="submit" id="cashSubmitBtn" class="btn btn-warning w-100">

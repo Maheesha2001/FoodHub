@@ -9,6 +9,10 @@
 
 <form asp-area="Customer" asp-controller="Checkout" asp-action="DeliveryInfo" method="post">
    @Html.AntiForgeryToken()
+      @* <input type="hidden" name="orderCode" value="@TempData["FrozenOrderCode"]" /> *@
+      @* <input type="hidden" asp-for="OrderCode" /> *@
+@* <input type="hidden" asp-for="OrderCode" />  *@
+    <input type="hidden" name="OrderCode" value="@Model.OrderCode" />
 
     <div class="mb-3">
         <label asp-for="Name">Name</label>

@@ -18,5 +18,7 @@ namespace FoodHub.ViewModels.Checkout
 
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }
+
+        public string? Code { get; set; }  
     }
 }

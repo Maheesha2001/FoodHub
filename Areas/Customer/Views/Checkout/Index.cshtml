@@ -39,9 +39,33 @@
 
     <div class="d-flex justify-content-between">
         <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
-       <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer" })">
+       @* <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout",  new { area = "Customer" })">
     Next: Delivery Info →
-</a>
+</a> *@
+@* <a class="btn btn-primary"
+   href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = TempData["FrozenOrderCode"] })">
+    Next: Delivery Info c→
+</a> *@
+  @{
+    var cartCode = (Model != null && Model.Any()) ? Model.FirstOrDefault()?.Code ?? "" : "";
+}
+
+
+<div class="d-flex justify-content-between">
+    <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
+
+    @if (!string.IsNullOrEmpty(cartCode))
+    {
+        <a class="btn btn-primary"
+           href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = cartCode })">
+            Next: Delivery Info →
+        </a>
+    }
+    else
+    {
+        <a class="btn btn-primary disabled">Next: Delivery Info →</a>
+    }
+</div>
 
 
 
@@ -61,7 +85,7 @@ const saveCheckoutUrl = '@Url.Action("SaveCheckoutCart", "Cart", new { area = ""
 
 let isFrozen = false;
 
-async function checkFrozenStatus() {
+@* async function checkFrozenStatus() {
     try {
         const res = await fetch("/Customer/Checkout/IsCartFrozen");
         const data = await res.json();
@@ -70,7 +94,27 @@ async function checkFrozenStatus() {
     } catch (err) {
         console.error("Error checking frozen status:", err);
     }
+} *@
+
+async function checkFrozenStatus() {
+    try {
+        const res = await fetch("/Customer/Checkout/IsCartFrozen", {
+            credentials: "same-origin"  // ensures cookies are sent
+        });
+
+        if (!res.ok) {
+            console.error("HTTP error", res.status);
+            return;
+        }
+
+        const data = await res.json();
+        isFrozen = data.frozen;
+        console.log("DB Frozen Check →", isFrozen);
+    } catch (err) {
+        console.error("Error checking frozen status:", err);
+    }
 }
+
 
 async function loadCart() {
     try {

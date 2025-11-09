@@ -8,6 +8,7 @@ namespace FoodHub.Models
 
         // Foreign key to ApplicationUser (AspNetUsers)
         public string UserId { get; set; } = string.Empty;
+        public string Code { get; set; }
         public ApplicationUser? User { get; set; }
 
         public decimal TotalAmount { get; set; }
@@ -17,9 +18,13 @@ namespace FoodHub.Models
        // public DateTime? UpdatedAt { get; set; }
 
         // Navigation
-        public ICollection<OrderItem>? OrderItems { get; set; }
+        // public ICollection<OrderItem>? OrderItems { get; set; }
+        // public DeliveryInfo? DeliveryInfo { get; set; }
+        // public virtual Payment? Payment { get; set; }
+
+         public ICollection<OrderItem>? OrderItems { get; set; }
         public DeliveryInfo? DeliveryInfo { get; set; }
-        public virtual Payment? Payment { get; set; }
+        public Payment? Payment { get; set; }
     }
 
 

@@ -6,10 +6,12 @@ namespace FoodHub.ViewModels.Orders
     public class MyOrderViewModel
     {
         public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
         public string PaymentStatus { get; set; } = string.Empty;
+        public string DeliveryStatus { get; set; } = string.Empty;
 
         // ✅ Add this line
         public virtual Payment? Payment { get; set; }

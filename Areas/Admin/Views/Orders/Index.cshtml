@@ -1,20 +1,154 @@
 @model IEnumerable<FoodHub.Models.Order>
 @{
     ViewData["Title"] = "Orders";
-   Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 <div class="container mt-5">
     <h2 class="fw-bold text-warning mb-4">Customer Orders</h2>
 
-    <table class="table table-hover shadow-sm">
+    <table class="table table-hover shadow-sm align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Order Code</th>
+                <th>Customer</th>
+                <th>Total (Rs.)</th>
+                <th>Order Status</th>
+                <th>Payment Status</th>
+                <th>Delivery Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.Code</td>
+                    <td>@order.User?.FullName</td>
+                    <td>@order.TotalAmount.ToString("N2")</td>
+
+                    <!-- ORDER STATUS -->
+                    <td>
+                        <form asp-action="UpdateOrderStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="orderCode" value="@order.Code" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@order.Status">@order.Status</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </button>
+                        </form>
+                    </td>
+
+                    <!-- PAYMENT STATUS -->
+                    <td>
+                        <form asp-action="UpdatePaymentStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="orderCode" value="@order.Code" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@(order.Payment?.PaymentStatus ?? "Not Available")">
+                                    @(order.Payment?.PaymentStatus ?? "Not Available")
+                                </option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </button>
+                        </form>
+                    </td>
+
+                    <!-- DELIVERY STATUS -->
+                    <td>
+                        <form asp-action="UpdateDeliveryStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="orderCode" value="@order.Code" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@(order.DeliveryInfo?.DeliveryStatus ?? "Not Available")">
+                                    @(order.DeliveryInfo?.DeliveryStatus ?? "Not Available")
+                                </option>
+                                <option value="Out for Delivery">Out for Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                           <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-check-lg text-white"></i>
+                            </button>
+                        </form>
+                    </td>
+
+                    <td>@order.CreatedAt.ToString("dd-MMM-yyyy hh:mm tt")</td>
+
+                    <td>
+                        <a asp-action="Details" asp-route-orderCode="@order.Code" class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.status-dropdown').forEach(select => {
+        const setDropdownColor = () => {
+            const val = select.value.toLowerCase();
+            let bg = '#6c757d'; // default gray
+            if (val.includes('pending')) bg = '#ffc107';
+            else if (val.includes('completed')) bg = '#198754';
+            else if (val.includes('paid')) bg = '#198754';
+            else if (val.includes('failed')) bg = '#dc3545';
+            else if (val.includes('cancel')) bg = '#dc3545';
+            else if (val.includes('out for')) bg = '#0d6efd';
+            else if (val.includes('delivered')) bg = '#20c997';
+            select.style.backgroundColor = bg;
+            select.style.color = 'white';
+        };
+        setDropdownColor();
+        select.addEventListener('change', setDropdownColor);
+    });
+</script>
+}
+
+
+@* @model IEnumerable<FoodHub.Models.Order>
+@{
+    ViewData["Title"] = "Orders";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="container mt-5">
+    <h2 class="fw-bold text-warning mb-4">Customer Orders</h2>
+
+    <table class="table table-hover shadow-sm align-middle">
         <thead class="table-dark">
             <tr>
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Total (Rs.)</th>
-                <th>Status</th>
-                <th>Payment Status</th> <!-- ✅ Added -->
+                <th>Order Status</th>
+                <th>Payment Status</th>
+                <th>Delivery Status</th>
                 <th>Date</th>
                 <th>Actions</th>
             </tr>
@@ -26,27 +160,64 @@
                     <td>@order.Id</td>
                     <td>@order.User?.FullName</td>
                     <td>@order.TotalAmount.ToString("N2")</td>
+
+                    <!-- ✅ ORDER STATUS -->
                     <td>
-                        <span class="badge bg-@(order.Status == "Delivered" ? "success" : order.Status == "Confirmed" ? "info" : "secondary")">
-                            @order.Status
-                        </span>
+                        <form asp-action="UpdateOrderStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@order.Status">@order.Status</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg text-white"></i>
+                                </button>
+
+                        </form>
                     </td>
+
+                    <!-- ✅ PAYMENT STATUS -->
                     <td>
-                        @* <span class="badge bg-@(order.Payment?.PaymentStatus == "Paid" ? "success" : "warning")">
-                            @order.Payment?.PaymentStatus ?? "Pending"
-                        </span> *@
-                        @* <span class="badge bg-@(order.Payment != null && order.Payment.PaymentStatus == "Paid" ? "success" : "warning")">
-                            @(order.Payment == null ? "Pending" : order.Payment.PaymentStatus)
-                        </span> *@
-                          <span class="badge @(order.Payment != null && 
-                         (order.Payment.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase) || 
-                          order.Payment.PaymentStatus.Equals("Success", StringComparison.OrdinalIgnoreCase)) 
-                         ? "bg-success" 
-                         : "bg-warning text-dark")">
-        @(order.Payment == null ? "Pending" : order.Payment.PaymentStatus)
-    </span>
+                        <form asp-action="UpdatePaymentStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@(order.Payment?.PaymentStatus ?? "Not Available")">
+                                    @(order.Payment?.PaymentStatus ?? "Not Available")
+                                </option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check-lg text-white"></i>
+                                </button>
+
+                        </form>
                     </td>
+
+                    <!-- ✅ DELIVERY STATUS -->
+                    <td>
+                        <form asp-action="UpdateDeliveryStatus" method="post" class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <select name="status" class="form-select form-select-sm status-dropdown">
+                                <option value="@(order.DeliveryInfo?.DeliveryStatus ?? "Not Available")">
+                                    @(order.DeliveryInfo?.DeliveryStatus ?? "Not Available")
+                                </option>
+                                <option value="Out for Delivery">Out for Delivery</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                           <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-check-lg text-white"></i>
+                            </button>
+
+
+                        </form>
+                    </td>
+
                     <td>@order.CreatedAt.ToString("dd-MMM-yyyy hh:mm tt")</td>
+
                     <td>
                         <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
                             View
@@ -57,3 +228,68 @@
         </tbody>
     </table>
 </div>
+
+<!-- ✅ CSS -->
+<style>
+    .status-dropdown {
+        color: white !important;
+        font-weight: 600;
+        border: none;
+        text-align: center;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    /* Optional: add some hover feedback */
+    .status-dropdown option {
+        color: white;
+        font-weight: 600;
+    }
+
+   .btn-success {
+        background-color: #198754 !important; /* Bootstrap green */
+        color: #fff !important; /* Force white text */
+        font-weight: bold;
+        border: none;
+    }
+
+    .btn-success:hover,
+    .btn-success:focus {
+        background-color: #157347 !important; /* Slightly darker */
+        color: #fff !important;
+        outline: none;
+        box-shadow: none;
+    }
+
+    /* ✅ Optional: make check symbol slightly larger for visibility */
+    .btn-success span {
+        font-size: 1.1rem;
+        color: #fff !important;
+    }
+</style>
+
+<!-- ✅ JS: dynamically color dropdown based on value -->
+@section Scripts {
+<script>
+    document.querySelectorAll('.status-dropdown').forEach(select => {
+        const setDropdownColor = () => {
+            const val = select.value.toLowerCase();
+            let bg = '#6c757d'; // default gray
+
+            if (val.includes('pending')) bg = '#ffc107';        // yellow
+            else if (val.includes('completed')) bg = '#198754';  // green
+            else if (val.includes('paid')) bg = '#198754';       // green
+            else if (val.includes('failed')) bg = '#dc3545';     // red
+            else if (val.includes('cancel')) bg = '#dc3545';     // red
+            else if (val.includes('out for')) bg = '#0d6efd';    // blue
+            else if (val.includes('delivered')) bg = '#20c997';  // teal
+
+            select.style.backgroundColor = bg;
+            select.style.color = 'white';
+        };
+
+        // Apply color initially and when changed
+        setDropdownColor();
+        select.addEventListener('change', setDropdownColor);
+    });
+</script>
+} *@

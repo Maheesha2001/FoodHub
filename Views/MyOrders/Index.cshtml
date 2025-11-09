@@ -48,7 +48,7 @@
                                     <span class="badge bg-secondary">@order.PaymentStatus</span>
                                 }
                             </td>
-                            <td>
+                            @* <td>
                                 @if (order.Status == "Completed")
                                 {
                                     <span class="badge bg-success">Completed</span>
@@ -63,15 +63,84 @@
                                 }
                             </td>
                             <td>
-                                @if (order.Status == "Pending" && order.PaymentStatus == "Pending")
+                               @if (order.DeliveryStatus == "Out for Delivery")
                                 {
-                                    <button class="btn btn-sm btn-outline-primary pay-btn" data-orderid="@order.Id">
-                                        <i class="bi bi-credit-card"></i> Pay Now
-                                    </button>
+                                    <span class="badge bg-primary">Out for Delivery</span>
+                                }
+                                else if (order.DeliveryStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (order.DeliveryStatus == "Delivered")
+                                {
+                                    <span class="badge bg-success">Delivered</span>
+                                }
+                                else if (order.DeliveryStatus == "Cancelled")
+                                {
+                                    <span class="badge bg-danger">Cancelled</span>
                                 }
                                 else
                                 {
-                                   <a href="@Url.Action("Details", "MyOrders", new { id = order.Id })" 
+                                    <span class="badge bg-secondary">@order.DeliveryStatus</span>
+                                }
+
+                            </td> *@
+                            <td>
+                                @{
+                                    string displayStatus = order.Status;
+                                    string badgeClass = "bg-secondary";
+
+                                    // 🔹 If order is Pending → show only "Pending" and skip delivery
+                                    if (order.Status == "Pending")
+                                    {
+                                        displayStatus = "Pending";
+                                        badgeClass = "bg-warning text-dark";
+                                    }
+                                    else if (order.DeliveryStatus == "Pending")
+                                    {
+                                        displayStatus = "Pending";
+                                        badgeClass = "bg-warning text-dark";
+                                    }
+                                    // 🔹 If delivery is Out for Delivery → override order status
+                                    else if (order.DeliveryStatus == "Out for Delivery")
+                                    {
+                                        displayStatus = "Out for Delivery";
+                                        badgeClass = "bg-primary";
+                                    }
+                                    // 🔹 If delivery is Delivered → show Delivered
+                                    else if (order.DeliveryStatus == "Delivered")
+                                    {
+                                        displayStatus = "Delivered";
+                                        badgeClass = "bg-success";
+                                    }
+                                    // 🔹 If delivery is Cancelled → show Cancelled
+                                    else if (order.DeliveryStatus == "Cancelled")
+                                    {
+                                        displayStatus = "Cancelled";
+                                        badgeClass = "bg-danger";
+                                    }
+                                    // 🔹 Otherwise, keep the order’s actual status
+                                    else if (order.Status == "Completed")
+                                    {
+                                        displayStatus = "Completed";
+                                        badgeClass = "bg-success";
+                                    }
+                                }
+
+                                <span class="badge @badgeClass">@displayStatus</span>
+                            </td>
+
+                            
+                            <td>
+                                 @if (string.IsNullOrEmpty(order.PaymentStatus) || order.PaymentStatus == "Not Available")
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary pay-btn" data-orderid="@order.Id">
+                                            <i class="bi bi-credit-card"></i> Pay Now
+                                        </button>
+                                    }
+                                else
+                                {
+                                   <a href="@Url.Action("Details", "MyOrders", new { orderCode = order.Code })" 
                                         class="btn btn-sm btn-outline-secondary">
                                             <i class="bi bi-eye"></i> View
                                         </a>
