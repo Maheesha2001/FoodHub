@@ -88,6 +88,10 @@ footer.custom-footer {
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2); /* stronger shadow */
 }
 
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
 
 /* ADMIN */
 
@@ -113,4 +117,10 @@ footer.custom-footer {
     .dashboard-card h5 {
         margin: 0;
         font-weight: 600;
+    }
+
+    .custom-th {
+        background-color: #000 !important; /* black background */
+        color: #fff !important;            /* white text */
+        text-align: center;     /* optional: center text */
     }

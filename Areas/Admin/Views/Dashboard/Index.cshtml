@@ -1,3 +1,4 @@
+@using System.Text.Json
 @{
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Admin Dashboard";
@@ -182,138 +183,313 @@
 
 </div>
 
+@section Scripts {
+    @if(ViewData["Page"]?.ToString() == "AddSpecials")
+    {
+        <script>
+    document.addEventListener("DOMContentLoaded", () => {
+           console.log("DOM fully loaded"); 
+        let items = [];
+        const tableBody = document.querySelector("#itemsTable tbody");
+        const totalDisplay = document.getElementById("totalPrice");
 
-@* @{
-    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Admin Dashboard";
+        document.getElementById("addItemBtn").addEventListener("click", function () {
+            const pizzaSelect = document.getElementById("pizzaSelect");
+            const bevSelect = document.getElementById("beverageSelect");
+            const qty = parseInt(document.getElementById("quantity").value);
+
+            let selectedItem = null;
+            let type = "";
+            if (pizzaSelect.value) {
+                selectedItem = pizzaSelect.selectedOptions[0];
+                type = "Pizza";
+            } else if (bevSelect.value) {
+                selectedItem = bevSelect.selectedOptions[0];
+                type = "Beverage";
+            }
+
+            if (!selectedItem) {
+                alert("Please select a pizza or beverage.");
+                return;
+            }
+
+            const id = selectedItem.value;
+            const name = selectedItem.text.split("-")[0].trim();
+            const price = parseFloat(selectedItem.getAttribute("data-price"));
+            const subtotal = price * qty;
+
+            items.push({ type, id, name, price, qty, subtotal });
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${type}</td>
+                <td>${name}</td>
+                <td>$${price.toFixed(2)}</td>
+                <td>${qty}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-btn">X</button></td>
+            `;
+            tableBody.appendChild(row);
+
+            pizzaSelect.value = "";
+            bevSelect.value = "";
+            document.getElementById("quantity").value = 1;
+
+            updateTotal();
+
+            // Remove item
+            row.querySelector(".remove-btn").addEventListener("click", () => {
+                items = items.filter(x => !(x.id === id && x.type === type));
+                row.remove();
+                updateTotal();
+            });
+        });
+
+        function updateTotal() {
+            const total = items.reduce((sum, x) => sum + x.subtotal, 0);
+            totalDisplay.textContent = total.toFixed(2);
+            document.getElementById("TotalPrice").value = total;
+            updateFinalPrice();
+        }
+
+        document.getElementById("discountType").addEventListener("change", updateFinalPrice);
+        document.getElementById("discountValue").addEventListener("input", updateFinalPrice);
+
+        function updateFinalPrice() {
+            const total = parseFloat(totalDisplay.textContent) || 0;
+            const discountType = document.getElementById("discountType").value;
+            const discountValue = parseFloat(document.getElementById("discountValue").value) || 0;
+
+            let final = total;
+            if (discountType === "Percentage") {
+                final = total - (total * (discountValue / 100));
+            } else if (discountType === "Amount") {
+                final = total - discountValue;
+            }
+
+            document.getElementById("finalPrice").value = final.toFixed(2);
+        }
+
+        document.querySelector("form").addEventListener("submit", function () {
+    // Remove existing hidden inputs
+    document.querySelectorAll(".special-item-input").forEach(x => x.remove());
+
+    items.forEach((item, index) => {
+        const mapping = {
+            type: "ItemType",
+            id: "ItemId",
+            qty: "Quantity",
+            subtotal: "Subtotal"
+        };
+
+        for (const key in mapping) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = `Items[${index}].${mapping[key]}`; // Model binding
+            input.value = item[key];
+            input.classList.add("special-item-input");
+            document.querySelector("form").appendChild(input);
+        }
+    });
+});
+
+        });
+    
+    
+    </script>
+    } else if(ViewData["Page"]?.ToString() == "EditSpecials")
+    {
+        <script>
+        // Serialize server-side data into JS only when EditSpecials page is active
+        const pizzas = @Html.Raw(JsonSerializer.Serialize(ViewBag.Pizzas ?? new List<object>()));
+        const beverages = @Html.Raw(JsonSerializer.Serialize(ViewBag.Beverages ?? new List<object>()));
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // make sure the edit partial is actually rendered and has the container
+            const container = document.getElementById("special-items");
+            if (!container) return; // nothing to do
+
+            const addBtn = document.getElementById("add-item");
+            let index = (document.querySelectorAll(".item-row")?.length) || 0;
+
+            const totalInput = document.querySelector("[name='TotalPrice']");
+            const discountType = document.querySelector("[name='DiscountType']");
+            const discountValue = document.querySelector("[name='DiscountValue']");
+            const finalInput = document.querySelector("[name='FinalPrice']");
+
+            function calcTotals() {
+                if (!totalInput) return;
+                let total = 0;
+                document.querySelectorAll(".item-row").forEach(row => {
+                    const qtyEl = row.querySelector(".item-qty");
+                    const itemSelect = row.querySelector(".item-id");
+                    const qty = parseFloat(qtyEl?.value || 0);
+                    const price = parseFloat(itemSelect?.selectedOptions[0]?.dataset?.price || 0);
+                    const subtotal = qty * price;
+                    const subText = row.querySelector(".subtotal-text");
+                    if (subText) subText.textContent = `Rs.${subtotal.toFixed(2)}`;
+                    total += subtotal;
+                });
+                totalInput.value = total.toFixed(2);
+                updateFinalPrice();
+            }
+
+            function updateFinalPrice() {
+                if (!finalInput || !totalInput) return;
+                const total = parseFloat(totalInput.value) || 0;
+                const discount = parseFloat(discountValue?.value || 0);
+                let final = total;
+                if (discountType && discountType.value === "Percentage") final = total - (total * discount/100);
+                else if (discountType && discountType.value === "Amount") final = total - discount;
+                finalInput.value = final.toFixed(2);
+            }
+
+            addBtn?.addEventListener("click", () => {
+                const newRow = document.createElement("div");
+                newRow.classList.add("row", "mb-2", "item-row", "border", "rounded", "p-2");
+                newRow.dataset.index = index;
+
+                newRow.innerHTML = `
+                    <div class="col-md-4">
+                        <label class="fw-semibold">Type</label>
+                        <select name="Items[${index}].ItemType" class="form-select item-type">
+                            <option value="">Select Type</option>
+                            <option value="Pizza">Pizza</option>
+                            <option value="Beverage">Beverage</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="fw-semibold">Item</label>
+                        <select name="Items[${index}].ItemId" class="form-select item-id">
+                            <option value="">Select Item</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="fw-semibold">Qty</label>
+                        <input type="number" name="Items[${index}].Quantity" value="1" class="form-control item-qty" min="1" />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <span class="fw-bold subtotal-text">Rs.0.00</span>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-item w-100">Remove</button>
+                    </div>
+                `;
+                container.appendChild(newRow);
+                index++;
+            });
+
+            container.addEventListener("click", e => {
+                if (e.target.classList.contains("remove-item")) {
+                    e.target.closest(".item-row").remove();
+                    calcTotals();
+                }
+            });
+
+            container.addEventListener("change", e => {
+                // when type changes, populate the item select using the JSON arrays
+                if (e.target.classList.contains("item-type")) {
+                    const type = e.target.value;
+                    const itemSelect = e.target.closest(".item-row").querySelector(".item-id");
+                    itemSelect.innerHTML = `<option value="">Select Item</option>`;
+
+                    if (type === "Pizza") {
+                        pizzas.forEach(p => {
+                            // adjust property names if your pizza objects use BasePrice vs Price
+                            const price = p.BasePrice ?? p.Price ?? 0;
+                            itemSelect.innerHTML += `<option value="${p.Id}" data-price="${price}">🍕 ${p.Name} - Rs.${price}</option>`;
+                        });
+                    } else if (type === "Beverage") {
+                        beverages.forEach(b => {
+                            const price = b.Price ?? 0;
+                            itemSelect.innerHTML += `<option value="${b.Id}" data-price="${price}">🥤 ${b.Name} - Rs.${price}</option>`;
+                        });
+                    }
+                }
+
+                if (e.target.classList.contains("item-id") || e.target.classList.contains("item-qty")) {
+                    calcTotals();
+                }
+
+                if (e.target === discountType || e.target === discountValue) {
+                    updateFinalPrice();
+                }
+            });
+
+            // make sure pre-existing rows (rendered by partial) have their item-id options
+            // For each existing row that has an item-type hidden value or pre-selected item-id,
+            // ensure the dataset.price is present (if not, we can set it by matching id in pizzas/beverages)
+            document.querySelectorAll(".item-row").forEach(row => {
+                const itemSelect = row.querySelector(".item-id");
+                const chosenValue = itemSelect?.value;
+                if (itemSelect && (!itemSelect.selectedOptions[0] || !itemSelect.selectedOptions[0].dataset.price)) {
+                    // try to match and set dataset.price to enable subtotal calc
+                    const typeHidden = row.querySelector("input[name^='Items'][name$='.ItemType']")?.value;
+                    if (chosenValue && typeHidden) {
+                        if (typeHidden === "Pizza") {
+                            const p = pizzas.find(x => x.Id == chosenValue);
+                            if (p) {
+                                const price = p.BasePrice ?? p.Price ?? 0;
+                                // add option if not present
+                                if (!itemSelect.querySelector(`option[value="${chosenValue}"]`)) {
+                                    itemSelect.innerHTML += `<option value="${p.Id}" data-price="${price}" selected>🍕 ${p.Name} - Rs.${price}</option>`;
+                                } else {
+                                    const opt = itemSelect.querySelector(`option[value="${chosenValue}"]`);
+                                    opt.dataset.price = price;
+                                }
+                            }
+                        } else if (typeHidden === "Beverage") {
+                            const b = beverages.find(x => x.Id == chosenValue);
+                            if (b) {
+                                const price = b.Price ?? 0;
+                                if (!itemSelect.querySelector(`option[value="${chosenValue}"]`)) {
+                                    itemSelect.innerHTML += `<option value="${b.Id}" data-price="${price}" selected>🥤 ${b.Name} - Rs.${price}</option>`;
+                                } else {
+                                    const opt = itemSelect.querySelector(`option[value="${chosenValue}"]`);
+                                    opt.dataset.price = price;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // initial calc once everything is set
+            calcTotals();
+        });
+        </script>
+    } else if(ViewData["Page"]?.ToString() == "ViewSpecials")
+    {
+        <script>
+         document.addEventListener("DOMContentLoaded", function () {
+        const specials = @Html.Raw(ViewData["SpecialsJson"]);
+        console.log("✅ Specials Data Loaded:", specials);
+
+        const modalBody = document.getElementById("special-items-body");
+        const buttons = document.querySelectorAll(".view-special-items");
+
+        buttons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                const specialId = this.dataset.id;
+                const special = specials.find(s => s.Id === specialId);
+
+                if (!special || !special.SpecialItems) return;
+
+                modalBody.innerHTML = "";
+
+                special.SpecialItems.forEach(item => {
+                    modalBody.innerHTML += `
+                        <tr>
+                            <td style="text-align:center">${item.ItemId}</td>
+                            <td style="text-align:center">${item.ItemType}</td>
+                            <td style="text-align:center">${item.ItemName}</td>
+                            <td style="text-align:center">${item.Quantity}</td>
+                        </tr>
+                    `;
+                });
+            });
+        });
+    });
+        </script>
+    }
 }
-
-<div class="d-flex">
-
-    <!-- Sidebar -->
-    <div class="bg-dark text-white p-3" style="width: 220px; min-height: 100vh;">
-        <ul class="nav flex-column mt-4">
-      <li class="nav-item mt-3">
-        <a href="/Admin/Dashboard" class="nav-link text-white">
-            <strong>Dashboard</strong>
-        </a>
-    </li>
-         <li class="nav-item mt-3"><strong style="color: #FFC107;">Specials</strong></li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=ViewSpecials" class="nav-link text-white">View Specials</a>
-            </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddSpecials" class="nav-link text-white">Add Specials</a>
-            </li>
-            <li class="nav-item mt-3"><strong style="color: #FFC107;">Pizza</strong></li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=ViewPizza" class="nav-link text-white">View Pizza</a>
-            </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddPizza" class="nav-link text-white">Add Pizza</a>
-            </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddPizzaCategory" class="nav-link text-white">Add Pizza Category</a>
-            </li>
-            <li class="nav-item mt-3"><strong style="color: #FFC107;">Beverages</strong></li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=ViewBeverages" class="nav-link text-white">View Beverages</a>
-            </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddBeverage" class="nav-link text-white">Add Beverage</a>
-            </li>
-            <li class="nav-item mt-2">
-                <a href="/Admin/Dashboard?page=AddBeverageCategory" class="nav-link text-white">Add Beverage Category</a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
-        
-        @if (ViewData["Page"]?.ToString() == "ViewSpecials")
-        {
-            var specials = ViewData["Specials"] as IEnumerable<FoodHub.Models.Special>;
-            @await Html.PartialAsync("_ViewSpecials", specials)
-        }
-        else if (ViewData["Page"]?.ToString() == "AddSpecials")
-        {
-            @await Html.PartialAsync("_AddSpecials", new FoodHub.Models.Special())
-        }
-
-        else
-        {
-            <!-- Default cards overview -->
-            <h3 class="text-warning mb-3">Dashboard Overview</h3>
-           <div class="row g-4">
-    <!-- Row 1 -->
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=ViewSpecials" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>View Specials</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddSpecials" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>Add Specials</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=ViewPizza" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>View Pizza</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddPizza" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>Add Pizza</h5>
-            </div>
-        </a>
-    </div>
-
-    <!-- Row 2 -->
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddPizzaCategory" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>Add Pizza Category</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=ViewBeverages" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>View Beverages</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddBeverage" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>Add Beverage</h5>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-3">
-        <a href="/Admin/Dashboard?page=AddBeverageCategory" class="text-decoration-none">
-            <div class="card dashboard-card text-center p-4">
-                <h5>Add Beverage Category</h5>
-            </div>
-        </a>
-    </div>
-</div>
-
-        }
-    </div>
-
-</div> *@

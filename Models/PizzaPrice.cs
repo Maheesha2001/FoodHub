@@ -9,12 +9,12 @@ namespace FoodHub.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        
         [Display(Name = "Pizza")]
-        public int PizzaId { get; set; }
+        public string PizzaId { get; set; }
 
         [ForeignKey("PizzaId")]
-        public Pizza? Pizza { get; set; } = null!;
+        public Pizza? Pizza { get; set; }
 
         [Required]
         [Display(Name = "Crust")]

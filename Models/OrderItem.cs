@@ -5,7 +5,7 @@ namespace FoodHub.Models
         public int Id { get; set; }
         public string Code { get; set; } 
          public string ProductType { get; set; } = string.Empty; // Pizza, Beverage, etc.
-        public int ProductId { get; set; }
+        public string ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
 
            public int Quantity { get; set; }

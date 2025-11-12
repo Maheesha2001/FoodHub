@@ -2,9 +2,8 @@
 
 <h2 class="text-warning mb-3">Add Special</h2>
 
-<form method="post" enctype="multipart/form-data" action="/Admin/Specials/Create">
-
-
+<form method="post" enctype="multipart/form-data" asp-action="Create" asp-controller="Specials" asp-area="Admin">
+    <!-- BASIC DETAILS -->
     <div class="mb-3">
         <label asp-for="Title" class="form-label fw-bold">Title</label>
         <input asp-for="Title" class="form-control" placeholder="Enter special title" />
@@ -17,15 +16,209 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
+    <div class="mb-4">
         <label class="form-label fw-bold">Image</label>
         <input type="file" name="ImageFile" class="form-control" />
     </div>
 
-    <button type="submit" class="btn btn-success">Add Special</button>
-    <a href="/Admin/Dashboard?page=ViewSpecials" class="btn btn-secondary ms-2">Cancel</a>
+    <hr />
+
+    <!-- ITEM SELECTION -->
+    <h5 class="text-primary fw-bold mb-3">Add Combo Items</h5>
+
+    <div class="row mb-3">
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Select Pizza</label>
+            <select id="pizzaSelect" class="form-select">
+                <option value="">-- Select Pizza --</option>
+                @foreach (var pizza in ViewBag.Pizzas)
+                {
+                    <option value="@pizza.Id" data-price="@pizza.BasePrice">@pizza.Name - $@pizza.BasePrice</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label fw-bold">Select Beverage</label>
+            <select id="beverageSelect" class="form-select">
+                <option value="">-- Select Beverage --</option>
+                @foreach (var bev in ViewBag.Beverages)
+                {
+                    <option value="@bev.Id" data-price="@bev.Price">@bev.Name - $@bev.Price</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Qty</label>
+            <input type="number" id="quantity" min="1" value="1" class="form-control" />
+        </div>
+    </div>
+
+    <div class="text-end mb-3">
+        <button type="button" id="addItemBtn" class="btn btn-warning">Add Item</button>
+    </div>
+
+    <!-- TEMPORARY TABLE -->
+    <table class="table table-bordered align-middle text-center" id="itemsTable">
+        <thead class="table-light">
+            <tr>
+                <th>Item Type</th>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Subtotal</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="text-end fw-bold">
+        Total: $<span id="totalPrice">0.00</span>
+    </div>
+
+    <hr />
+
+    <!-- DISCOUNT + FINAL PRICE -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <label asp-for="DiscountType" class="form-label fw-bold">Discount Type</label>
+            <select asp-for="DiscountType" class="form-select" id="discountType">
+                <option value="Percentage">Percentage (%)</option>
+                <option value="Amount">Fixed Amount</option>
+            </select>
+            <span asp-validation-for="DiscountType" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="DiscountValue" class="form-label fw-bold">Discount Value</label>
+            <input asp-for="DiscountValue" class="form-control" id="discountValue" placeholder="Enter discount" />
+            <span asp-validation-for="DiscountValue" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="FinalPrice" class="form-label fw-bold">Final Price</label>
+            <input asp-for="FinalPrice" class="form-control" id="finalPrice" readonly />
+        </div>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+        <label asp-for="IsActive" class="form-check-label fw-bold">Active</label>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success">Add Special</button>
+        <a href="/Admin/Dashboard?page=ViewSpecials" class="btn btn-secondary ms-2">Cancel</a>
+    </div>
+    <input type="hidden" id="TotalPrice" name="TotalPrice" />
+
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+           console.log("DOM fully loaded YES"); 
+        let items = [];
+        const tableBody = document.querySelector("#itemsTable tbody");
+        const totalDisplay = document.getElementById("totalPrice");
+
+        document.getElementById("addItemBtn").addEventListener("click", function () {
+            const pizzaSelect = document.getElementById("pizzaSelect");
+            const bevSelect = document.getElementById("beverageSelect");
+            const qty = parseInt(document.getElementById("quantity").value);
+
+            let selectedItem = null;
+            let type = "";
+            if (pizzaSelect.value) {
+                selectedItem = pizzaSelect.selectedOptions[0];
+                type = "Pizza";
+            } else if (bevSelect.value) {
+                selectedItem = bevSelect.selectedOptions[0];
+                type = "Beverage";
+            }
+
+            if (!selectedItem) {
+                alert("Please select a pizza or beverage.");
+                return;
+            }
+
+            const id = selectedItem.value;
+            const name = selectedItem.text.split("-")[0].trim();
+            const price = parseFloat(selectedItem.getAttribute("data-price"));
+            const subtotal = price * qty;
+
+            items.push({ type, id, name, price, qty, subtotal });
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${type}</td>
+                <td>${name}</td>
+                <td>$${price.toFixed(2)}</td>
+                <td>${qty}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-btn">X</button></td>
+            `;
+            tableBody.appendChild(row);
+
+            pizzaSelect.value = "";
+            bevSelect.value = "";
+            document.getElementById("quantity").value = 1;
+
+            updateTotal();
+
+            // Remove item
+            row.querySelector(".remove-btn").addEventListener("click", () => {
+                items = items.filter(x => !(x.id === id && x.type === type));
+                row.remove();
+                updateTotal();
+            });
+        });
+
+        function updateTotal() {
+            const total = items.reduce((sum, x) => sum + x.subtotal, 0);
+            totalDisplay.textContent = total.toFixed(2);
+            document.getElementById("TotalPrice").value = total;
+            updateFinalPrice();
+        }
+
+        document.getElementById("discountType").addEventListener("change", updateFinalPrice);
+        document.getElementById("discountValue").addEventListener("input", updateFinalPrice);
+
+        function updateFinalPrice() {
+            const total = parseFloat(totalDisplay.textContent) || 0;
+            const discountType = document.getElementById("discountType").value;
+            const discountValue = parseFloat(document.getElementById("discountValue").value) || 0;
+
+            let final = total;
+            if (discountType === "Percentage") {
+                final = total - (total * (discountValue / 100));
+            } else if (discountType === "Amount") {
+                final = total - discountValue;
+            }
+
+            document.getElementById("finalPrice").value = final.toFixed(2);
+        }
+        });
+    
+     document.querySelector("form").addEventListener("submit", function () {
+    // Remove existing hidden inputs
+    document.querySelectorAll(".special-item-input").forEach(x => x.remove());
+
+    items.forEach((item, index) => {
+        for (const prop in item) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = $"Items[{index}].{prop}"; // Model binding
+            input.value = item[prop];
+            input.classList.add("special-item-input");
+            document.querySelector("form").appendChild(input);
+        }
+    });
+});
+
+    </script>
 }

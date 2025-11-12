@@ -107,12 +107,12 @@ public class AccountController : Controller
                     // ✅ Merge guest cart items into CartItems table
                     foreach (var incoming in guestCart)
                     {
-                        if (!int.TryParse(incoming.Id, out int pid))
-                            continue;
+                        // if (!int.TryParse(incoming.Id, out int pid))
+                        //     continue;
 
                         // Look for existing item with same ProductId and Type
                         var existingItem = _db.CartItems.FirstOrDefault(i =>
-                            i.ProductId == pid &&
+                            i.ProductId == incoming.Id &&
                             i.Type == incoming.Type &&
                             i.Code == cart.Code);
 
@@ -125,7 +125,7 @@ public class AccountController : Controller
                             _db.CartItems.Add(new CartItem
                             {
                                 Code = cart.Code,
-                                ProductId = pid,
+                                ProductId = incoming.Id,
                                 ProductName = incoming.Name,
                                 Type = incoming.Type,
                                 Quantity = incoming.Quantity,

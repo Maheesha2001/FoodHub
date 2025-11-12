@@ -38,6 +38,7 @@
             @price.Crust.CategoryName
             <input type="hidden" name="PizzaPrices[@i].Id" value="@price.Id" />
             <input type="hidden" name="PizzaPrices[@i].CrustId" value="@price.CrustId" />
+            <input type="hidden" name="PizzaPrices[@i].PizzaId" value="@Model.Id" /> 
         </td>
         <td>
             <input name="PizzaPrices[@i].Price" value="@price.Price" class="form-control" />

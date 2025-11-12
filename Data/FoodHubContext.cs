@@ -11,6 +11,7 @@ namespace FoodHub.Data
 
         public DbSet<FoodItem> FoodItems { get; set; }
         public DbSet<Special> Specials { get; set; }
+        public DbSet<SpecialItem> SpecialItem { get; set; }
         public DbSet<Pizza> Pizzas { get; set; }
         public DbSet<Beverage> Beverages { get; set; }
         public DbSet<PizzaCrustCategory> PizzaCrustCategory { get; set; }
@@ -22,15 +23,16 @@ namespace FoodHub.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
         
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    base.OnModelCreating(modelBuilder);
 
-    modelBuilder.Entity<Order>()
-        .Ignore(o => o.OrderItems)
-        .Ignore(o => o.DeliveryInfo)
-        .Ignore(o => o.Payment);
-}
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Order>()
+                .Ignore(o => o.OrderItems)
+                .Ignore(o => o.DeliveryInfo)
+                .Ignore(o => o.Payment);
+        }
 
     }
 }

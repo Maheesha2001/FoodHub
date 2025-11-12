@@ -5,7 +5,8 @@ namespace FoodHub.Models
 {
     public class Beverage
     {
-        public int Id { get; set; }
+        [Key]
+        public string? Id { get; set; } 
 
         public string Name { get; set; }
 

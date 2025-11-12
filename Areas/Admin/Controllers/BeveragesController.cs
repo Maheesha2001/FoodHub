@@ -52,6 +52,7 @@ namespace FoodHub.Areas.Admin.Controllers
             }
 
             beverage.CreatedAt = DateTime.Now;
+             beverage.Id = GenerateBeverageId();
             _context.Beverages.Add(beverage);
             await _context.SaveChangesAsync();
 
@@ -70,7 +71,7 @@ namespace FoodHub.Areas.Admin.Controllers
         // POST: Admin/Beverages/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Beverage beverage, IFormFile? ImageFile)
+        public async Task<IActionResult> Edit(string id, Beverage beverage, IFormFile? ImageFile)
         {
             if (id != beverage.Id) return NotFound();
 
@@ -129,5 +130,25 @@ namespace FoodHub.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        
+          private string GenerateBeverageId()
+            {
+                // Get the last beverage ID from the database
+                var lastBeverage = _context.Beverages
+                    .OrderByDescending(b => b.Id)
+                    .FirstOrDefault();
+
+                if (lastBeverage == null)
+                    return "BVG-0001"; // Start from BV-0001 if none exist
+
+                // Extract numeric part (after "BV-")
+                var lastNumber = int.Parse(lastBeverage.Id.Split('-')[1]);
+                var newNumber = lastNumber + 1;
+
+                return $"BV-{newNumber:D4}"; // Format as BV-0001, BV-0002, etc.
+            }
+
+
+    
     }
 }
