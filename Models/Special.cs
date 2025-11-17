@@ -18,6 +18,8 @@ namespace FoodHub.Models
     public string? ImageName { get; set; }
     public bool IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     public ICollection<SpecialItem> SpecialItems { get; set; } = new List<SpecialItem>();
 }

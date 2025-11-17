@@ -293,9 +293,7 @@
     });
 });
 
-        });
-    
-    
+        }); 
     </script>
     } else if(ViewData["Page"]?.ToString() == "EditSpecials")
     {
@@ -460,7 +458,54 @@
         </script>
     } else if(ViewData["Page"]?.ToString() == "ViewSpecials")
     {
-        <script>
+          <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const specials = @Html.Raw(ViewData["SpecialsJson"]);
+        console.log("✅ Specials Data Loaded:", specials);
+
+        const modalBody = document.getElementById("special-items-body");
+        const buttons = document.querySelectorAll(".view-special-items");
+
+        buttons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                const specialId = this.dataset.id;
+                const special = specials.find(s => s.Id === specialId);
+
+                if (!special || !special.SpecialItems) return;
+
+                modalBody.innerHTML = "";
+
+                special.SpecialItems.forEach(item => {
+                    modalBody.innerHTML += `
+                        <tr>
+                            <td style="text-align:center">${item.ItemId}</td>
+                            <td style="text-align:center">${item.ItemType}</td>
+                            <td style="text-align:center">${item.ItemName}</td>
+                            <td style="text-align:center">${item.Quantity}</td>
+                        </tr>
+                    `;
+                });
+
+                // Show the IsActive status somewhere (for example in a badge)
+                const statusBadge = document.getElementById("special-status");
+                if (statusBadge) {
+                    statusBadge.innerHTML = special.IsActive 
+                        ? '<span class="badge bg-success">Active</span>' 
+                        : '<span class="badge bg-secondary">Inactive</span>';
+                }
+            });
+        });
+
+        // Optional: live update every 5 seconds
+        setInterval(() => {
+            const now = new Date();
+            specials.forEach(s => {
+                s.IsActive = new Date(s.StartDate) <= now && new Date(s.EndDate) >= now;
+            });
+        }, 5000);
+    });
+    </script>
+        @* <script>
          document.addEventListener("DOMContentLoaded", function () {
         const specials = @Html.Raw(ViewData["SpecialsJson"]);
         console.log("✅ Specials Data Loaded:", specials);
@@ -490,6 +535,6 @@
             });
         });
     });
-        </script>
+        </script> *@
     }
 }

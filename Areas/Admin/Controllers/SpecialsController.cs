@@ -16,131 +16,76 @@ namespace FoodHub.Areas.Admin.Controllers
             _context = context;
             _environment = environment;
         }
-
+       
         // GET: Admin/Specials
-        // public async Task<IActionResult> Index()
-        // {
-        //     // var specials = await _context.Specials.ToListAsync();
-        //     var specials = await _context.Specials
-        //                           .Include(s => s.SpecialItems)
-        //                           .ToListAsync();
-        //     return View(specials);
-        // }
-        // public async Task<IActionResult> Index()
-        // {
-        //     var specials = await _context.Specials
-        //         .Include(s => s.SpecialItems)
-        //         .ToListAsync();
-
-        //     var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
-        //     var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
-
-        //     // Attach names dynamically to SpecialItems
-        //     foreach (var special in specials)
-        //     {
-        //         foreach (var item in special.SpecialItems)
-        //         {
-        //             if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
-        //                 item.ItemName = pizzas[item.ItemId];
-        //             else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
-        //                 item.ItemName = beverages[item.ItemId];
-        //             else
-        //                 item.ItemName = "Unknown";
-        //         }
-        //     }
-
-        //     return View(specials);
-        // }
-// GET: Admin/Specials
-public async Task<IActionResult> Index()
-{
-    var specials = await _context.Specials
-        .Include(s => s.SpecialItems)
-        .ToListAsync();
-
-    var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
-    var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
-
-    // Attach names dynamically to SpecialItems
-    foreach (var special in specials)
-    {
-        Console.WriteLine($"\n🔹 SPECIAL: {special.Id} - {special.Title}");
-
-        foreach (var item in special.SpecialItems)
+        public async Task<IActionResult> Index()
         {
-            if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
-                item.ItemName = pizzas[item.ItemId];
-            else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
-                item.ItemName = beverages[item.ItemId];
-            else
-                item.ItemName = "Unknown";
+            var specials = await _context.Specials
+                .Include(s => s.SpecialItems)
+                .ToListAsync();
 
-            // ✅ Log each item
-            Console.WriteLine($"   ▶ ItemType: {item.ItemType}, ItemId: {item.ItemId}, ItemName: {item.ItemName}, Qty: {item.Quantity}");
+            var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
+            var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
+
+            // Attach names dynamically to SpecialItems
+            foreach (var special in specials)
+            {
+                Console.WriteLine($"\n🔹 SPECIAL: {special.Id} - {special.Title}");
+
+                foreach (var item in special.SpecialItems)
+                {
+                    if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
+                        item.ItemName = pizzas[item.ItemId];
+                    else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
+                        item.ItemName = beverages[item.ItemId];
+                    else
+                        item.ItemName = "Unknown";
+
+                    // ✅ Log each item
+                    Console.WriteLine($"   ▶ ItemType: {item.ItemType}, ItemId: {item.ItemId}, ItemName: {item.ItemName}, Qty: {item.Quantity}");
+                }
+            }
+
+            Console.WriteLine("✅ Specials and their items loaded successfully.\n");
+
+            return View(specials);
         }
-    }
-
-    Console.WriteLine("✅ Specials and their items loaded successfully.\n");
-
-    return View(specials);
-}
-
-
-        // // GET: Admin/Specials/Details/5
-
-        // public async Task<IActionResult> Details(string? id)
-        // {
-        //     if (id == null) return NotFound();
-
-        //     var special = await _context.Specials.FirstOrDefaultAsync(s => s.Id == id);
-        //     if (special == null) return NotFound();
-
-        //     return View(special);
-        // }
 
         // GET: Admin/Specials/Details/5
         public async Task<IActionResult> Details(string? id)
         {
-            // if (id == null) return NotFound();
 
-            // // Include SpecialItems for this special
-            // var special = await _context.Specials
-            //                             .Include(s => s.SpecialItems)
-            //                             .FirstOrDefaultAsync(s => s.Id == id);
-
-            // if (special == null) return NotFound();
-
-            // return View(special);
             var specials = await _context.Specials
         .Include(s => s.SpecialItems)
         .ToListAsync();
 
-    var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
-    var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
+            var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
+            var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
 
-    // Attach names dynamically to SpecialItems
-    foreach (var special in specials)
-    {
-        Console.WriteLine($"\n🔹 SPECIAL: {special.Id} - {special.Title}");
+            // Attach names dynamically to SpecialItems
+            foreach (var special in specials)
+            {
+                Console.WriteLine($"\n🔹 SPECIAL: {special.Id} - {special.Title}");
 
-        foreach (var item in special.SpecialItems)
-        {
-            if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
-                item.ItemName = pizzas[item.ItemId];
-            else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
-                item.ItemName = beverages[item.ItemId];
-            else
-                item.ItemName = "Unknown";
+                foreach (var item in special.SpecialItems)
+                {
+                    if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
+                        item.ItemName = pizzas[item.ItemId];
+                    else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
+                        item.ItemName = beverages[item.ItemId];
+                    else
+                        item.ItemName = "Unknown";
 
-            // ✅ Log each item
-            Console.WriteLine($"   ▶ ItemType: {item.ItemType}, ItemId: {item.ItemId}, ItemName: {item.ItemName}, Qty: {item.Quantity}");
+                    // ✅ Log each item
+                    Console.WriteLine($"   ▶ ItemType: {item.ItemType}, ItemId: {item.ItemId}, ItemName: {item.ItemName}, Qty: {item.Quantity}");
+                }
+            }
+
+            Console.WriteLine("✅ Specials and their items loaded successfully.\n");
+
+            return View(specials);
         }
-    }
-
-    Console.WriteLine("✅ Specials and their items loaded successfully.\n");
-
-    return View(specials);
-        }
+        
         // POST: Admin/Specials/Create
         [HttpPost]
         // [ValidateAntiForgeryToken]
@@ -190,7 +135,7 @@ public async Task<IActionResult> Index()
                  // Calculate total from items
                 special.TotalPrice = special.SpecialItems.Sum(x => x.Subtotal);
                 special.FinalPrice = special.TotalPrice;
-
+                special.CreatedAt = DateTime.Now;
                 _context.Specials.Add(special);
                 await _context.SaveChangesAsync();
 
@@ -338,11 +283,14 @@ if (special.DiscountValue.HasValue)
 if (special.FinalPrice.HasValue)
     existingSpecial.FinalPrice = special.FinalPrice.Value;
 
-// if (special.IsActive.HasValue)
-//     existingSpecial.IsActive = special.IsActive.Value;
+            // if (special.IsActive.HasValue)
+            //     existingSpecial.IsActive = special.IsActive.Value;
+// ✅ Update StartDate and EndDate
+existingSpecial.StartDate = special.StartDate;
+existingSpecial.EndDate = special.EndDate;
 
-if (!string.IsNullOrEmpty(special.ImageName))
-    existingSpecial.ImageName = special.ImageName;
+            if (!string.IsNullOrEmpty(special.ImageName))
+                existingSpecial.ImageName = special.ImageName;
 
         // ✅ Update SpecialItems
         var itemsToRemove = existingSpecial.SpecialItems
@@ -389,6 +337,55 @@ if (!string.IsNullOrEmpty(special.ImageName))
         }
 
 
+    // POST: Admin/Specials/Delete/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return NotFound();
+
+        var special = await _context.Specials
+            .Include(s => s.SpecialItems)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (special == null)
+            return NotFound();
+
+        try
+        {
+            // ✅ Delete related SpecialItems first
+            if (special.SpecialItems != null && special.SpecialItems.Any())
+            {
+                _context.SpecialItem.RemoveRange(special.SpecialItems);
+            }
+
+            // ✅ Delete image from wwwroot/uploads/specials
+            if (!string.IsNullOrEmpty(special.ImageName))
+            {
+                var imagePath = Path.Combine(_environment.WebRootPath, "uploads", "specials", special.ImageName);
+                if (System.IO.File.Exists(imagePath))
+                {
+                    System.IO.File.Delete(imagePath);
+                    Console.WriteLine($"🗑️ Deleted image: {imagePath}");
+                }
+            }
+
+            // ✅ Remove the Special itself
+            _context.Specials.Remove(special);
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"✅ Special {id} deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error deleting special {id}: {ex.Message}");
+            return BadRequest("Error occurred while deleting the special.");
+        }
+
+        // ✅ Redirect back to the specials list
+        return RedirectToAction("Index", "Dashboard", new { area = "Admin", page = "ViewSpecials" });
+    }
 
     }
 }

@@ -143,49 +143,90 @@ namespace FoodHub.Areas.Admin.Controllers
         {
             ViewData["Page"] = page;
 
+            // if (page == "ViewSpecials")
+            // {
+            //     var specials = await _context.Specials
+            //         .Include(s => s.SpecialItems)
+            //         .ToListAsync();
+
+            //     // Get item names
+            //     var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
+            //     var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
+
+            //     // Map item names for display
+            //     foreach (var special in specials)
+            //     {
+            //         foreach (var item in special.SpecialItems)
+            //         {
+            //             if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
+            //                 item.ItemName = pizzas[item.ItemId];
+            //             else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
+            //                 item.ItemName = beverages[item.ItemId];
+            //             else
+            //                 item.ItemName = "Unknown";
+            //         }
+            //     }
+
+            //     // Pass to ViewData for normal display
+            //     ViewData["Specials"] = specials;
+
+            //     // Pass JSON for JavaScript use
+            //     //ViewData["SpecialsJson"] = System.Text.Json.JsonSerializer.Serialize(specials);
+            //     ViewData["SpecialsJson"] = JsonSerializer.Serialize(specials, new JsonSerializerOptions
+            // {
+            //     ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            //     WriteIndented = false
+            // });
+
+            // }
             if (page == "ViewSpecials")
-            {
-                // var specials = await _context.Specials.ToListAsync();
-                // // ViewData["Pizzas"] = await _context.Pizzas.ToListAsync();
-                // // ViewData["Beverages"] = await _context.Beverages.ToListAsync();
-                // Console.WriteLine("DATA COMES FROM HERE");
-
-                // ViewData["Specials"] = specials;
-                // Include related SpecialItems
-    var specials = await _context.Specials
-        .Include(s => s.SpecialItems)
-        .ToListAsync();
-
-    // Get item names
-    var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
-    var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
-
-    // Map item names for display
-    foreach (var special in specials)
-    {
-        foreach (var item in special.SpecialItems)
-        {
-            if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
-                item.ItemName = pizzas[item.ItemId];
-            else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
-                item.ItemName = beverages[item.ItemId];
-            else
-                item.ItemName = "Unknown";
-        }
-    }
-
-    // Pass to ViewData for normal display
-    ViewData["Specials"] = specials;
-
-    // Pass JSON for JavaScript use
-    //ViewData["SpecialsJson"] = System.Text.Json.JsonSerializer.Serialize(specials);
-    ViewData["SpecialsJson"] = JsonSerializer.Serialize(specials, new JsonSerializerOptions
 {
-    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-    WriteIndented = false
-});
+            var specials = await _context.Specials
+                .Include(s => s.SpecialItems)
+                .ToListAsync();
 
+            var now = DateTime.Now;
+
+            // Get item names
+            var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);
+            var beverages = await _context.Beverages.ToDictionaryAsync(b => b.Id, b => b.Name);
+
+            // Map item names and calculate IsActive
+            foreach (var special in specials)
+            {
+                Console.WriteLine("Sart Date "+ special.StartDate);
+                Console.WriteLine("End Date "+ special.EndDate);
+                // Calculate IsActive based on current time
+                //special.IsActive = special.StartDate <= now && special.EndDate >= now;
+                special.IsActive =
+                    special.StartDate.HasValue &&
+                    special.EndDate.HasValue &&
+                    special.StartDate.Value.Date <= now.Date &&
+                    special.EndDate.Value.Date >= now.Date;
+
+                Console.WriteLine("Active Status "+ special.IsActive);
+                foreach (var item in special.SpecialItems)
+                {
+                    if (item.ItemType == "Pizza" && pizzas.ContainsKey(item.ItemId))
+                        item.ItemName = pizzas[item.ItemId];
+                    else if (item.ItemType == "Beverage" && beverages.ContainsKey(item.ItemId))
+                        item.ItemName = beverages[item.ItemId];
+                    else
+                        item.ItemName = "Unknown";
+                }
             }
+
+            // Pass to ViewData for normal display
+            ViewData["Specials"] = specials;
+
+            // Pass JSON for JavaScript use
+            ViewData["SpecialsJson"] = JsonSerializer.Serialize(specials, new JsonSerializerOptions
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = false
+            });
+        }
+
             else if (page == "ViewPizza")
             {
                 var pizzas = await _context.Pizzas

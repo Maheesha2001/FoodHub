@@ -156,6 +156,7 @@ namespace FoodHub.Controllers
                 var existing = _db.CartItems.FirstOrDefault(i => i.Code == cart.Code && i.ProductId == item.Id && i.Type == item.Type);
                 if (existing != null)
                 {
+                    Console.WriteLine("IT DOES");
                     existing.Quantity += item.Quantity;
                 }
                 else
@@ -180,6 +181,124 @@ namespace FoodHub.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        // [HttpPost]
+        // public async Task<IActionResult> AddSpecialToCart([FromBody] CartSpecialDto dto)
+        // {
+        //     Console.WriteLine("HERE SPECIAL");
+        //     Console.WriteLine("Received specialId: " + dto.SpecialId);
+
+        //     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //     if (string.IsNullOrEmpty(userId))
+        //         return Unauthorized("User not logged in");
+
+        //     // 1. Get user's cart
+        //     var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+        //     if (cart == null)
+        //     {
+        //         cart = new Cart
+        //         {
+        //             UserId = userId,
+        //             Code = CodeGenerator.GenerateFexCode(),
+        //             Status = "Active",
+        //             CreatedAt = DateTime.Now
+        //         };
+        //         _db.Carts.Add(cart);
+        //         await _db.SaveChangesAsync();
+        //     }
+
+        //     // 2. Get special
+        //     var special = await _db.Specials.FirstOrDefaultAsync(s => s.Id == dto.SpecialId && s.IsActive);
+        //     if (special == null) return BadRequest("Special not found or inactive");
+        //     CheckCartItem(special.Id, cart.Code);
+        //     // 3. Add to cart
+        //     var cartItem = new CartItem
+        //     {
+        //         Code = cart.Code,
+        //         ProductId = special.Id,
+        //         ProductName = special.Title,
+        //         Type = "Special",
+        //         Quantity = dto.Quantity,
+        //         Price = special.FinalPrice ?? 0
+        //     };
+        //     _db.CartItems.Add(cartItem);
+        //     await _db.SaveChangesAsync();
+
+        //     return Ok(new { message = "Special added to cart", cartItem });
+        // }
+
+        // CheckCartItem(string itemId, string cartCode)
+        // {
+            
+        // }
+
+        [HttpPost]
+public async Task<IActionResult> AddSpecialToCart([FromBody] CartSpecialDto dto)
+{
+    Console.WriteLine("HERE SPECIAL");
+    Console.WriteLine("Received specialId: " + dto.SpecialId);
+
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+        return Unauthorized("User not logged in");
+
+    // 1. Get user's cart
+    var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+    if (cart == null)
+    {
+        cart = new Cart
+        {
+            UserId = userId,
+            Code = CodeGenerator.GenerateFexCode(),
+            Status = "Active",
+            CreatedAt = DateTime.Now
+        };
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync();
+    }
+
+    // 2. GET SPECIAL
+    var special = await _db.Specials.FirstOrDefaultAsync(s => s.Id == dto.SpecialId && s.IsActive);
+    if (special == null) return BadRequest("Special not found or inactive");
+
+    // 3. Check if special is already in the cart
+    var existingItem = await FindSpecialInCart(cart.Code, dto.SpecialId);
+
+    if (existingItem != null)
+    {
+        // Increase quantity
+        existingItem.Quantity += dto.Quantity;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Special quantity updated", cartItem = existingItem });
+    }
+
+    // 4. Add NEW cart item
+    var cartItem = new CartItem
+    {
+        Code = cart.Code,
+        ProductId = special.Id,
+        ProductName = special.Title,
+        Type = "Special",
+        Quantity = dto.Quantity,
+        Price = special.FinalPrice ?? 0
+    };
+
+    _db.CartItems.Add(cartItem);
+    await _db.SaveChangesAsync();
+
+    return Ok(new { message = "Special added to cart", cartItem });
+}
+private async Task<CartItem?> FindSpecialInCart(string cartCode, string specialId)
+{
+    return await _db.CartItems
+        .FirstOrDefaultAsync(ci => 
+            ci.Code == cartCode &&
+            ci.ProductId == specialId &&
+            ci.Type == "Special"
+        );
+}
+
 
         // ✅ Update quantity
         [HttpPost]
@@ -211,7 +330,7 @@ namespace FoodHub.Controllers
         // ✅ Remove item
         [HttpPost]
         public IActionResult RemoveItem(string productId, string type)
-        {
+        {Console.WriteLine("CAME HERE NOW");
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -235,6 +354,71 @@ namespace FoodHub.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+//         [HttpPost]
+// public async Task<IActionResult> Remove(string id, string type)
+// {
+//     Console.WriteLine("REMOVE CALLED");
+//     Console.WriteLine("ID: " + id + " | Type: " + type);
+
+//     var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+//     if (string.IsNullOrEmpty(userId))
+//         return Unauthorized();
+
+//     // Find the user's active cart
+//     var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+//     if (cart == null) return NotFound("Cart not found");
+
+//     // Find matching cart item
+//     var cartItem = await _db.CartItems
+//         .FirstOrDefaultAsync(i => i.Code == cart.Code && i.ProductId == id && i.Type == type);
+
+//     if (cartItem == null)
+//         return NotFound("Item not found");
+
+//     _db.CartItems.Remove(cartItem);
+//     await _db.SaveChangesAsync();
+
+//     return Ok(new { message = "Item removed" });
+// }
+
+        [HttpPost]
+public async Task<IActionResult> Remove(string id, string type)
+{
+    Console.WriteLine("REMOVE CALLED");
+    Console.WriteLine("ID: " + id + " | Type: " + type);
+
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (string.IsNullOrEmpty(userId))
+        return Unauthorized();
+
+    var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+    if (cart == null) return NotFound("Cart not found");
+
+    var cartItem = await _db.CartItems
+        .FirstOrDefaultAsync(i => i.Code == cart.Code && i.ProductId == id && i.Type == type);
+
+    if (cartItem == null)
+        return NotFound("Item not found");
+
+    _db.CartItems.Remove(cartItem);
+    await _db.SaveChangesAsync();
+
+    // 🔥 If cart becomes empty → delete cart
+    bool hasItems = await _db.CartItems.AnyAsync(i => i.Code == cart.Code);
+
+    if (!hasItems)
+    {
+        _db.Carts.Remove(cart);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Item removed & cart deleted", cartDeleted = true });
+    }
+
+    return Ok(new { message = "Item removed", cartDeleted = false });
+}
 
         // ✅ Get full cart (for sidebar)
         [HttpGet]

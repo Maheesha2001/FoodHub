@@ -72,11 +72,23 @@ async function addToCart(id, name, type, price) {
     openCartSidebar();
 
     try {
+        // await fetch('/Cart/AddToCart', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({ id, name, type, price, quantity: 1 })
+        // });
         await fetch('/Cart/AddToCart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, name, type, price, quantity: 1 })
-        });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        Id: id,
+        Name: name,
+        Type: type,
+        Price: Number(price || 0),
+        Quantity: 1
+    })
+});
+
     } catch (err) {
         console.error('Failed to sync cart with server:', err);
     }
@@ -244,50 +256,6 @@ document.addEventListener("click", e => {
     if (dec) changeQuantity(dec.dataset.id, dec.dataset.type, -1);
 });
 
-// // ---------------------- CHECKOUT BUTTON ----------------------
-// function attachCheckoutListener() {
-//     const checkoutBtn = document.getElementById('checkoutBtn');
-//     if (!checkoutBtn) return;
-
-//     checkoutBtn.addEventListener('click', async () => {
-//         try {
-//             // Use in-memory cart (already normalized)
-//             const payload = cart.map(i => ({
-//                 id: i.id.toString(),
-//                 name: i.name,
-//                 type: i.type,
-//                 price: i.price,
-//                 quantity: i.quantity
-//             }));
-
-//             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-//             const response = await fetch("/Cart/SaveCheckoutCart", {
-//                 method: "POST",
-//                 headers: {
-//                     "Content-Type": "application/json",
-//                     "RequestVerificationToken": token
-//                 },
-//                 body: JSON.stringify(payload)
-//             });
-
-//             if (response.ok) {
-//                 // Clear local cache and reload from server so DB becomes source of truth
-//                 localStorage.removeItem("cart");
-//                 await loadCart();
-//                 // Redirect to checkout page (protected)
-//                 window.location.href = "/Cart/Checkout";
-//             } else {
-//                 const text = await response.text();
-//                 console.error("Checkout save failed:", response.status, text);
-//                 alert("Error saving your cart. Try again.");
-//             }
-//         } catch (err) {
-//             console.error("Error during checkout:", err);
-//             alert("Error during checkout. Check the console.");
-//         }
-//     });
-// }
 // ---------------------- CHECKOUT BUTTON ----------------------
 function attachCheckoutListener() {
     const checkoutBtn = document.getElementById('checkoutBtn');
@@ -349,6 +317,7 @@ function attachCheckoutListener() {
 
 // ---------------------- INITIALIZE ----------------------
 document.addEventListener("DOMContentLoaded", () => {
+       // cleanCart();
     loadCart();
     attachCheckoutListener();
 });

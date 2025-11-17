@@ -16,7 +16,19 @@ public class SpecialsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetSpecials()
     {
-        var specials = await _context.Specials.ToListAsync();
+        var now = DateTime.Now;
+
+        var specials = await _context.Specials
+            .Where(s => s.IsActive) // ONLY ACTIVE
+            .ToListAsync();
+
         return Ok(specials);
     }
+
+    // [HttpGet]
+    // public async Task<IActionResult> GetSpecials()
+    // {
+    //     var specials = await _context.Specials.ToListAsync();
+    //     return Ok(specials);
+    // }
 }

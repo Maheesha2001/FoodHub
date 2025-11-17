@@ -6,6 +6,8 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHostedService<SpecialsStatusService>();
+
 // Add services
 builder.Services.AddControllersWithViews()
  .AddJsonOptions(options =>
