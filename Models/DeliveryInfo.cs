@@ -12,5 +12,7 @@ namespace FoodHub.Models
         public string DeliveryStatus { get; set; } = string.Empty;
 
         public string? DeliveryNotes { get; set; }
+
+           public DateTime? DeliveredAt { get; set; } 
     }
 }

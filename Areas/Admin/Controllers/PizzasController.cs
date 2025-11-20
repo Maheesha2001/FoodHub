@@ -3,10 +3,12 @@ using FoodHub.Data;
 using FoodHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FoodHub.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
     public class PizzasController : Controller
     {
         private readonly FoodHubContext _context;

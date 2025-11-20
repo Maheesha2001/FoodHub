@@ -4,10 +4,12 @@ using FoodHub.Data;
 using FoodHub.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FoodHub.Controllers.Admin
 {
-    [Area("Admin")]
+[Area("Admin")]
+[Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
     public class OrdersController : Controller
     {
         private readonly FoodHubContext _context;

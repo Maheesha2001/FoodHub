@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FoodHub.Data;
 using FoodHub.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FoodHub.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
     public class SpecialsController : Controller
     {
         private readonly FoodHubContext _context;

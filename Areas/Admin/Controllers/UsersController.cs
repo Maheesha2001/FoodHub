@@ -2,10 +2,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using FoodHub.Models;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FoodHub.Controllers
 {
+
     [Area("Admin")]
+    [Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;

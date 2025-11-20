@@ -1,3 +1,10 @@
+@using System.Security.Claims
+@{
+    bool isAdminLoggedIn = User?.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Admin");
+    var adminUserName = isAdminLoggedIn ? User.Identity.Name : null;
+}
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +17,7 @@
 </head>
 <body>
     <!-- Admin Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    @* <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
               <a class="navbar-brand fw-bold text-warning" asp-controller="Home" asp-action="Index">FoodieExpress</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
@@ -21,12 +28,78 @@
                     <li class="nav-item"><a class="nav-link" aasp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Users" asp-action="Index">Users</a></li>
                     <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Settings">Settings</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Settings">Logout</a></li>
+                     @if (isAdminLoggedIn)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-circle"></i> @adminUserName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" style="background-color:black">
+                                    <li>
+                                        <form asp-area="Admin" asp-controller="Account" asp-action="LogoutAdmin" method="post" class="px-3 py-1">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-dark text-white border-0" style="text-decoration: none; background-color:black">
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="LoginAdmin">Login</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="RegisterAdmin">Register</a></li>
+                        }
+
+                </ul>
+            </div>
+        </div>
+    </nav> *@
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-warning" asp-controller="Home" asp-action="Index">FoodieExpress</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Users" asp-action="Index">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Settings">Settings</a></li>
+
+                    @if (isAdminLoggedIn)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> @adminUserName
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" style="background-color:black">
+                                <li>
+                                    <form asp-area="Admin"
+                                        asp-controller="Account"
+                                        asp-action="LogoutAdmin"
+                                        method="post"
+                                        style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link text-danger p-0 m-0">
+                                            Logout
+                                        </button>
+                                    </form>
+
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Account" asp-action="LoginAdmin">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-area="Admin" asp-controller="Account" asp-action="RegisterAdmin">Register</a></li>
+                    }
                 </ul>
             </div>
         </div>
     </nav>
-
     <div class="content">
         @RenderBody()
     </div>
