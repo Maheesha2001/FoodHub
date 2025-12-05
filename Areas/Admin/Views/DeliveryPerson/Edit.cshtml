@@ -1,0 +1,68 @@
+@model FoodHub.Models.DeliveryPerson
+@{
+    ViewData["Title"] = "Edit Delivery Person";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4 fw-bold text-warning">Edit Delivery Person</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form asp-action="Edit" method="post">
+
+                <input type="hidden" asp-for="Id" />
+
+                  <input type="hidden" asp-for="Password" />
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Full Name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NIC" class="form-label">NIC</label>
+                    <input asp-for="NIC" class="form-control" />
+                    <span asp-validation-for="NIC" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="FingerprintEnabled" class="form-check-input" type="checkbox" />
+                    <label asp-for="FingerprintEnabled" class="form-check-label">
+                        Fingerprint Login Enabled
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        Active Status
+                    </label>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary w-50">Save Changes</button>
+                    <a asp-action="Index" class="btn btn-secondary w-50 mt-2">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
