@@ -1,4 +1,6 @@
 using FoodHub.Data;
+using FoodHub.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,5 +55,29 @@ namespace FoodHub.Controllers
 
             return Ok(orders);
         }
+    
+    
+    [HttpPost("login")]
+public async Task<IActionResult> Login([FromBody] LoginRequest request)
+{
+    var user = await _context.DeliveryPerson
+        .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+    if (user == null)
+        return Unauthorized(new LoginResponse { Success = false, Message = "Invalid email" });
+
+    // Verify password
+    var passwordHasher = new PasswordHasher<DeliveryPerson>();
+    var result = passwordHasher.VerifyHashedPassword(user, user.Password, request.Password);
+
+    if (result == PasswordVerificationResult.Failed)
+        return Unauthorized(new LoginResponse { Success = false, Message = "Invalid password" });
+
+    // Generate token (JWT or similar)
+    string token = "YOUR_TOKEN_HERE";
+
+    return Ok(new LoginResponse { Success = true, Token = token, Message = "Login successful" });
+}
+
     }
 }

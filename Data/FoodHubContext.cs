@@ -23,6 +23,7 @@ namespace FoodHub.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<DeliveryPerson> DeliveryPerson { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
