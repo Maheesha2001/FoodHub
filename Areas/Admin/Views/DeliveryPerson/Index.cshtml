@@ -14,6 +14,15 @@
             + Register Delivery Person
         </a>
     </div>
+
+  <a asp-area="Admin"
+   asp-controller="DeliveryPerson"
+   asp-action="PresentDrivers"
+   class="btn btn-warning">
+   Attendance
+</a>
+
+
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center">No users found.</div>

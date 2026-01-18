@@ -1,0 +1,25 @@
+@model List<FoodHub.ViewModels.PresentDriverVM>
+
+<h2>Present Drivers Today</h2>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Driver ID</th>
+            <th>Name</th>
+            <th>NIC</th>
+            <th>Check In Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model)
+        {
+            <tr>
+                <td>@d.DeliveryPersonId</td>
+                <td>@d.Name</td>
+                <td>@d.NIC</td>
+                <td>@(d.CheckInTime?.ToString("hh:mm tt") ?? "-")</td>
+            </tr>
+        }
+    </tbody>
+</table>

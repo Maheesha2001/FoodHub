@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using FoodHub.ViewModels;
 
 namespace FoodHub.Areas.Admin.Controllers
 {
@@ -397,6 +398,32 @@ public async Task<IActionResult> Edit(string id, DeliveryPerson model)
     TempData["SuccessMessage"] = "Delivery person updated successfully!";
     return RedirectToAction("Index");
 }
+
+public IActionResult Attendance()
+        {
+            return View();
+        }
+
+    public async Task<IActionResult> PresentDrivers()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var attendance = await _context.DeliveryAttendance
+                .Where(a => a.Date == today && a.IsPresent)
+                .ToListAsync();
+
+            var drivers = await _context.DeliveryPerson.ToListAsync();
+
+            var result = attendance.Select(a => new PresentDriverVM
+            {
+                DeliveryPersonId = a.DeliveryPersonId,
+                Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
+                NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
+                CheckInTime = a.CheckInTime
+            }).ToList();
+
+            return View("Attendance", result);
+        }
 
         // Details / Delete methods...
     }

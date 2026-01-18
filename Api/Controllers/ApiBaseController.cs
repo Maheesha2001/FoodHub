@@ -6,5 +6,6 @@ namespace FoodHub.Api.Controllers
     [Route("api/[controller]")]
     public class ApiBaseController : ControllerBase
     {
+        
     }
 }

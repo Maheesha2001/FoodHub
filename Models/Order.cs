@@ -24,7 +24,11 @@ namespace FoodHub.Models
 
          public ICollection<OrderItem>? OrderItems { get; set; }
         public DeliveryInfo? DeliveryInfo { get; set; }
-        public Payment? Payment { get; set; }
+        public Payment? Payment { get; set; } 
+
+          public string DeliveryPersonId { get; set; }
+          public string DeliveryStatus { get; set; }
+          public DateTime DeliveredAt {get; set; }
     }
 
 
