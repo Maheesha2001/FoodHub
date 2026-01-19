@@ -26,9 +26,9 @@ namespace FoodHub.Models
         public DeliveryInfo? DeliveryInfo { get; set; }
         public Payment? Payment { get; set; } 
 
-          public string DeliveryPersonId { get; set; }
-          public string DeliveryStatus { get; set; }
-          public DateTime DeliveredAt {get; set; }
+          public string? DeliveryPersonId { get; set; }
+          public string? DeliveryStatus { get; set; }
+          public DateTime? DeliveredAt {get; set; }
     }
 
 

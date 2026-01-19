@@ -33,151 +33,7 @@ namespace FoodHub.Areas.Admin.Controllers
             return View();
         }
 
-        // [HttpPost]
-        // [ValidateAntiForgeryToken]
-        // public async Task<IActionResult> Register(DeliveryPerson model)
-        // {
-        //     if (ModelState.IsValid)
-        //     {
-        //         // Check if email already exists
-        //         var existingUser = await _context.DeliveryPerson
-        //             .FirstOrDefaultAsync(dp => dp.Email == model.Email);
-        //         if (existingUser != null)
-        //         {
-        //             ModelState.AddModelError("Email", "Email is already registered.");
-        //             return View(model);
-        //         }
-
-        //         // Hash the password using ASP.NET Core Identity PasswordHasher
-        //         var passwordHasher = new PasswordHasher<DeliveryPerson>();
-        //         model.Password = passwordHasher.HashPassword(model, model.Password);
-
-        //         // Set created date and default values
-        //         model.CreatedAt = DateTime.UtcNow;
-        //         model.IsActive = true; // default active status
-
-        //         _context.DeliveryPerson.Add(model);
-        //         await _context.SaveChangesAsync();
-
-        //         TempData["SuccessMessage"] = "Delivery person registered successfully!";
-        //         return RedirectToAction("Index");
-        //     }
-
-        //     return View(model);
-        // }
-
-// [HttpPost]
-// [ValidateAntiForgeryToken]
-// public async Task<IActionResult> Register(DeliveryPerson model)
-// {
-//     if (ModelState.IsValid)
-//     {
-//         var existingUser = await _context.DeliveryPerson
-//             .FirstOrDefaultAsync(dp => dp.Email == model.Email);
-//         if (existingUser != null)
-//         {
-//             ModelState.AddModelError("Email", "Email is already registered.");
-//             return View(model);
-//         }
-
-//         // Hash password
-//         var passwordHasher = new PasswordHasher<DeliveryPerson>();
-//         model.Password = passwordHasher.HashPassword(model, model.Password);
-
-//         // Generate custom ID
-//         var lastId = await _context.DeliveryPerson
-//             .OrderByDescending(dp => dp.CreatedAt)
-//             .Select(dp => dp.Id)
-//             .FirstOrDefaultAsync();
-
-//         model.Id = GenerateCustomId(lastId);
-
-//         // Default values
-//         model.CreatedAt = DateTime.UtcNow;
-//         model.IsActive = true;
-
-//         _context.DeliveryPerson.Add(model);
-//         await _context.SaveChangesAsync();
-
-//         TempData["SuccessMessage"] = "Delivery person registered successfully!";
-//         return RedirectToAction("Index");
-//     }else {
-//              // Detailed ModelState errors
-//         Console.WriteLine("Validation failed! See details below:");
-
-//         foreach (var key in ModelState.Keys)
-//         {
-//             var state = ModelState[key];
-//             foreach (var error in state.Errors)
-//             {
-//                 Console.WriteLine($"Property: '{key}', ErrorMessage: '{error.ErrorMessage}'" +
-//                                   (error.Exception != null ? $", Exception: {error.Exception.Message}" : ""));
-//             }
-//         }
-
-//         // Optional: show full ModelState JSON for deep debugging
-//         var options = new JsonSerializerOptions { WriteIndented = true };
-//         string modelStateJson = JsonSerializer.Serialize(ModelState, options);
-//         Console.WriteLine("Full ModelState JSON:\n" + modelStateJson);
-    
-//             }
-
-//     return View(model);
-// }
-
-// [HttpPost]
-// [ValidateAntiForgeryToken]
-// public async Task<IActionResult> Register(DeliveryPerson model)
-// {
-//     // REMOVE Id from validation
-//     ModelState.Remove(nameof(model.Id));
-
-//     if (ModelState.IsValid)
-//     {
-//         var existingUser = await _context.DeliveryPerson
-//             .FirstOrDefaultAsync(dp => dp.Email == model.Email);
-//         if (existingUser != null)
-//         {
-//             ModelState.AddModelError("Email", "Email is already registered.");
-//             return View(model);
-//         }
-
-//         // Hash password
-//         var passwordHasher = new PasswordHasher<DeliveryPerson>();
-//         model.Password = passwordHasher.HashPassword(model, model.Password);
-
-//         // Generate custom ID
-//         var lastId = await _context.DeliveryPerson
-//             .OrderByDescending(dp => dp.CreatedAt)
-//             .Select(dp => dp.Id)
-//             .FirstOrDefaultAsync();
-
-//         model.Id = GenerateCustomId(lastId);
-
-//         // Default values
-//         model.CreatedAt = DateTime.UtcNow;
-//         model.IsActive = true;
-
-//         _context.DeliveryPerson.Add(model);
-//         await _context.SaveChangesAsync();
-
-//         TempData["SuccessMessage"] = "Delivery person registered successfully!";
-//         return RedirectToAction("Index");
-//     }
-
-//     // Detailed ModelState logging for debugging
-//     foreach (var key in ModelState.Keys)
-//     {
-//         var state = ModelState[key];
-//         foreach (var error in state.Errors)
-//         {
-//             Console.WriteLine($"Property: '{key}', ErrorMessage: '{error.ErrorMessage}'");
-//         }
-//     }
-
-//     return View(model);
-// }
-
+        
 [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Register(DeliveryPerson model)
@@ -404,27 +260,49 @@ public IActionResult Attendance()
             return View();
         }
 
-    public async Task<IActionResult> PresentDrivers()
+        public async Task<IActionResult> PresentDrivers()
         {
-            var today = DateTime.UtcNow.Date;
+                var today = DateTime.UtcNow.Date;
 
+                var attendance = await _context.DeliveryAttendance
+                    .Where(a => a.Date == today && a.IsPresent)
+                    .ToListAsync();
+
+                var drivers = await _context.DeliveryPerson.ToListAsync();
+
+                var result = attendance.Select(a => new PresentDriverVM
+                {
+                    DeliveryPersonId = a.DeliveryPersonId,
+                    Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
+                    NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
+                    CheckInTime = a.CheckInTime
+                }).ToList();
+
+                return View("Attendance", result);
+            }   
+
+
+        public async Task<IActionResult> PresentDriversHistory()
+        {
             var attendance = await _context.DeliveryAttendance
-                .Where(a => a.Date == today && a.IsPresent)
                 .ToListAsync();
 
             var drivers = await _context.DeliveryPerson.ToListAsync();
 
             var result = attendance.Select(a => new PresentDriverVM
-            {
-                DeliveryPersonId = a.DeliveryPersonId,
-                Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
-                NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
-                CheckInTime = a.CheckInTime
-            }).ToList();
+                {
+                    DeliveryPersonId = a.DeliveryPersonId,
+                    Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
+                    NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
+                    CheckInTime = a.CheckInTime
+                }).ToList();
 
-            return View("Attendance", result);
-        }
-
-        // Details / Delete methods...
+                return View("Attendance", result);
+            }      
+        
+    
+    
     }
+
+    
 }

@@ -17,9 +17,6 @@ namespace FoodHub.Api.Controllers
             _db = db;
         }
 
-
-
-
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -64,238 +61,108 @@ namespace FoodHub.Api.Controllers
             });
         }
 
-        // // GET api/delivery/pending
-        // [HttpGet("pending")]
-        // public async Task<IActionResult> GetPendingOrders()
-        // {
-        //     var orders = await _db.Orders
-        //         .Include(o => o.OrderItems)
-        //         .Include(o => o.Payment)
-        //         .Include(o => o.DeliveryInfo)
-        //         .Where(o => o.Status != "Delivered") // Only pending or confirmed
-        //         .ToListAsync();
-
-        //     return Ok(orders);
-        // }
-
-// // GET api/delivery/pending
-// [HttpGet("pending")]
-// public async Task<IActionResult> GetPendingOrders()
-// {
-//     // Fetch pending orders
-//     var orders = await _db.Orders
-//         .Where(o => o.Status == "Pending")
-//         .Select(o => new
-//         {
-//             o.Id,
-//             o.Code,
-//             o.TotalAmount,
-//             o.Status,
-//             o.CreatedAt,
-//             o.DeliveryStatus
-//         })
-//         .ToListAsync();
-
-//     // Fetch all items for these orders
-//     var orderCodes = orders.Select(o => o.Code).ToList();
-//     var items = await _db.OrderItems
-//         .Where(oi => orderCodes.Contains(oi.Code))
-//         .Select(oi => new
-//         {
-//             oi.Code,
-//             oi.ProductName,
-//             oi.Quantity,
-//             oi.UnitPrice,
-//             TotalPrice = oi.Quantity * oi.UnitPrice
-//         })
-//         .ToListAsync();
-
-//     // Attach items to each order
-//     var result = orders.Select(o => new
-//     {
-//         o.Id,
-//         o.Code,
-//         o.TotalAmount,
-//         o.Status,
-//         o.CreatedAt,
-//         o.DeliveryStatus,
-//         Items = items.Where(i => i.Code == o.Code).ToList()
-//     });
-
-//     return Ok(result);
-// }
-
-// GET api/delivery/pending
-[HttpGet("pending")]
-public async Task<IActionResult> GetPendingOrders()
-{
-    var orders = await (
-        from o in _db.Orders
-        join u in _db.Users on o.UserId equals u.Id
-        join d in _db.DeliveryInfo on o.Code equals d.Code into deliveryJoin
-        from d in deliveryJoin.DefaultIfEmpty() // LEFT JOIN (important)
-        where o.Status == "Pending"
-        select new
+            
+        // GET api/delivery/pending
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPendingOrders()
         {
-            code = o.Code,
-            userName = u.FullName,
-            dilveryName = d.Name,
-            address = d != null ? d.Address : "Address not available"
+            var orders = await (
+                from o in _db.Orders
+                join u in _db.Users on o.UserId equals u.Id
+                join d in _db.DeliveryInfo on o.Code equals d.Code into deliveryJoin
+                from d in deliveryJoin.DefaultIfEmpty() // LEFT JOIN (important)
+                where o.Status == "Pending"
+                select new
+                {
+                    code = o.Code,
+                    userName = u.FullName,
+                    dilveryName = d.Name,
+                    address = d != null ? d.Address : "Address not available"
+                }
+            ).ToListAsync();
+
+            return Ok(orders);
         }
-    ).ToListAsync();
 
-    return Ok(orders);
-}
-
-// [HttpGet("order/{code}")]
-// public async Task<IActionResult> GetOrderByCode(string code)
-// {
-//     var order = await _db.Orders
-//         .Where(o => o.Code == code)
-//         .Select(o => new 
-//         {
-//             o.Id,
-//             o.Code,
-//             o.TotalAmount,
-//             o.Status,
-//             o.CreatedAt,
-//             DeliveryStatus = o.DeliveryStatus,
-//             Items = _db.OrderItems
-//                         .Where(i => i.Code == o.Code)
-//                         .Select(i => new {
-//                             i.ProductName,
-//                             i.Quantity,
-//                             i.UnitPrice,
-//                             TotalPrice = i.Quantity * i.UnitPrice
-//                         }).ToList()
-//         })
-//         .FirstOrDefaultAsync();
-
-//     if (order == null)
-//         return NotFound();
-
-//     return Ok(order);
-// }
-
-[HttpGet("order/{code}")]
-public async Task<IActionResult> GetOrderByCode(string code)
-{
-    Console.WriteLine($"[GetOrderByCode] Called with code: {code}");
-
-    var order = await _db.Orders
-        .Where(o => o.Code == code)
-        .Select(o => new 
+        [HttpGet("order/{code}")]
+        public async Task<IActionResult> GetOrderByCode(string code)
         {
-            o.Id,
-            o.Code,
-            o.TotalAmount,
-            o.Status,
-            o.CreatedAt,
-            DeliveryStatus = o.DeliveryStatus,
-            Items = _db.OrderItems
-                        .Where(i => i.Code == o.Code)
-                        .Select(i => new {
-                            i.ProductName,
-                            i.Quantity,
-                            i.UnitPrice,
-                            TotalPrice = i.Quantity * i.UnitPrice
-                        }).ToList()
-        })
-        .FirstOrDefaultAsync();
+            Console.WriteLine($"[GetOrderByCode] Called with code: {code}");
 
-    if (order == null)
-    {
-        Console.WriteLine($"[GetOrderByCode] Order not found for code: {code}");
-        return NotFound();
-    }
+            var order = await _db.Orders
+                .Where(o => o.Code == code)
+                .Select(o => new 
+                {
+                    o.Id,
+                    o.Code,
+                    o.TotalAmount,
+                    o.Status,
+                    o.CreatedAt,
+                    DeliveryStatus = o.DeliveryStatus,
+                    Items = _db.OrderItems
+                                .Where(i => i.Code == o.Code)
+                                .Select(i => new {
+                                    i.ProductName,
+                                    i.Quantity,
+                                    i.UnitPrice,
+                                    TotalPrice = i.Quantity * i.UnitPrice
+                                }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
-    Console.WriteLine($"[GetOrderByCode] Order found: Id={order.Id}, Code={order.Code}, TotalAmount={order.TotalAmount}");
-    Console.WriteLine($"[GetOrderByCode] Items count: {order.Items.Count}");
-    foreach (var item in order.Items)
-    {
-        Console.WriteLine($"    Item: {item.ProductName}, Qty: {item.Quantity}, UnitPrice: {item.UnitPrice}, TotalPrice: {item.TotalPrice}");
-    }
+            if (order == null)
+            {
+                Console.WriteLine($"[GetOrderByCode] Order not found for code: {code}");
+                return NotFound();
+            }
 
-    return Ok(order);
-}
+            Console.WriteLine($"[GetOrderByCode] Order found: Id={order.Id}, Code={order.Code}, TotalAmount={order.TotalAmount}");
+            Console.WriteLine($"[GetOrderByCode] Items count: {order.Items.Count}");
+            foreach (var item in order.Items)
+            {
+                Console.WriteLine($"    Item: {item.ProductName}, Qty: {item.Quantity}, UnitPrice: {item.UnitPrice}, TotalPrice: {item.TotalPrice}");
+            }
 
+            return Ok(order);
+        }
 
-// // GET api/delivery/order/{code}
-// [HttpGet("order/{code}")]
-// public async Task<IActionResult> GetOrderByCode(string code)
-// {
-//     var order = await _db.Orders
-//         .Where(o => o.Code == code)
-//         .Select(o => new
-//         {
-//             o.Id,
-//             o.Code,
-//             o.TotalAmount,
-//             o.Status,
-//             Items = _db.OrderItems
-//                 .Where(i => i.Code == o.Code)
-//                 .Select(i => new
-//                 {
-//                     i.ProductName,
-//                     i.Quantity,
-//                     i.UnitPrice,
-//                     TotalPrice = i.Quantity * i.UnitPrice
-//                 })
-//                 .ToList()
-//         })
-//         .FirstOrDefaultAsync();
+        // POST api/delivery/mark-delivered/{code}
+        [HttpPost("mark-delivered/{code}")]
+        public async Task<IActionResult> MarkDelivered(string code)
+        {
+            var order = await _db.Orders
+                .FirstOrDefaultAsync(o => o.Code == code);
 
-//     if (order == null)
-//         return NotFound();
+            if (order == null)
+                return NotFound("Order not found");
 
-//     return Ok(order);
-// }
+            var deliveryInfo = await _db.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == code);
 
+            if (deliveryInfo == null)
+                return NotFound("Delivery info not found");
 
-// POST api/delivery/mark-delivered/{code}
-[HttpPost("mark-delivered/{code}")]
-public async Task<IActionResult> MarkDelivered(string code)
-{
-    var order = await _db.Orders.FirstOrDefaultAsync(o => o.Code == code);
+            var payment = await _db.Payments
+                    .FirstOrDefaultAsync(p => p.Code == code);
+            
 
-    if (order == null)
-        return NotFound();
+            // Update Order
+            order.Status = "Completed";
+            order.DeliveryStatus = "Completed";
+            order.DeliveredAt = DateTime.UtcNow;
 
-    order.Status = "Delivered";
-    order.DeliveryStatus = "Completed";
-    order.DeliveredAt = DateTime.UtcNow;
+            // Update DeliveryInfo
+            deliveryInfo.DeliveryStatus = "Delivered";
+            deliveryInfo.DeliveredAt = DateTime.UtcNow; // optional
 
-    await _db.SaveChangesAsync();
+            // Payments
+                payment.PaymentStatus = "Paid";
+            
 
-    return Ok();
-}
+            await _db.SaveChangesAsync();
 
-
-//===================================================================================
-    
-//         // GET api/delivery/pending
-// [HttpGet("pending")]
-// public async Task<IActionResult> GetPendingOrders()
-// {
-//     // Fetch only the orders needed for delivery list
-//     var orders = await _db.Orders
-//         //.Where(o => o.Status != "Delivered" && o.DeliveryPersonId == null) // unassigned orders
-//         .Where(o => o.Status == "Pending")
-//         .Select(o => new
-//         {
-//             o.Id,
-//             o.Code,
-//             o.TotalAmount,
-//             o.Status,
-//             o.CreatedAt,        
-//             o.DeliveryStatus
-//             // Add more fields you need, but avoid navigation properties
-//         })
-//         .ToListAsync();
-
-//     return Ok(orders);
-// }
-
+            return Ok(new { message = "Order marked as delivered" });
+        }
 
         // PUT api/delivery/complete/123
         [HttpPut("complete/{id}")]
@@ -324,7 +191,7 @@ public async Task<IActionResult> MarkDelivered(string code)
         }
 
        
-       [HttpPost("attendance")]
+        [HttpPost("attendance")]
         public async Task<IActionResult> MarkAttendance(
             [FromHeader(Name = "deliveryPersonId")] string deliveryPersonId,
             [FromBody] string date)

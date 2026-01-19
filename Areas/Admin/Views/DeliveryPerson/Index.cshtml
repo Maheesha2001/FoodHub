@@ -9,18 +9,44 @@
 
     <!-- Register Button -->
      <!-- Navigation button -->
-    <div class="text-end mb-3">
-        <a asp-area="Admin" asp-controller="DeliveryPerson" asp-action="Register" class="btn btn-warning">
-            + Register Delivery Person
-        </a>
-    </div>
+    <div class="d-flex justify-content-end gap-2 mb-3">
 
-  <a asp-area="Admin"
-   asp-controller="DeliveryPerson"
-   asp-action="PresentDrivers"
-   class="btn btn-warning">
-   Attendance
-</a>
+        <div>
+        <a asp-area="Admin"
+            asp-controller="Dashboard"
+            asp-action="Index"
+            class="btn btn-primary">
+                Dashboard
+            </a>
+        </div>
+
+        <div class="text-end mb-3">
+            <a asp-area="Admin" asp-controller="DeliveryPerson" asp-action="Register" class="btn btn-warning">
+                + Register Delivery Person
+            </a>
+        </div>
+        <div>
+            <a asp-area="Admin"
+                asp-controller="DeliveryPerson"
+                asp-action="PresentDrivers"
+                class="btn btn-success">
+                Attendance
+            </a>
+        </div>
+        <div>
+            <a asp-area="Admin"
+                asp-controller="DeliveryPerson"
+                asp-action="PresentDriversHistory"
+                class="btn btn-info">
+                Attendance History
+            </a>
+        </div>
+    </div>
+    
+
+   
+
+     
 
 
     @if (!Model.Any())
