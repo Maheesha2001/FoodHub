@@ -262,7 +262,8 @@ public IActionResult Attendance()
 
         public async Task<IActionResult> PresentDrivers()
         {
-                var today = DateTime.UtcNow.Date;
+                var today = DateTime.Today;
+
 
                 var attendance = await _context.DeliveryAttendance
                     .Where(a => a.Date == today && a.IsPresent)
@@ -297,10 +298,17 @@ public IActionResult Attendance()
                     CheckInTime = a.CheckInTime
                 }).ToList();
 
-                return View("Attendance", result);
+                return View("AttendanceHistory", result);
             }      
-        
-    
+           
+            public async Task<IActionResult> DeliveryAssign()
+            {
+                var assignments = await _context.DeliveryOrderAssignments
+                    .ToListAsync();
+
+                 return View("DeliveryOrderAssignments", assignments);
+            }
+
     
     }
 

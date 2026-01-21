@@ -1,0 +1,49 @@
+@model List<FoodHub.Models.DeliveryOrderAssignment>
+
+@{
+    ViewData["Title"] = "Delivery Persons";
+   Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+<h2>Delivery Assignments</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order Code</th>
+            <th>Driver</th>
+            <th>Assigned Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.OrderCode</td>
+                <td>@a.DeliveryPersonId</td> <!-- use Id for now -->
+                <td>@a.AssignedAt.ToShortDateString()</td> <!-- correct property -->
+                <td>
+                    @{
+                        string currentStatus;
+                        if (a.DeliveredAt.HasValue)
+                        {
+                            currentStatus = "Delivered";
+                        }
+                        else if (a.PickedUpAt.HasValue)
+                        {
+                            currentStatus = "Picked Up";
+                        }
+                        else
+                        {
+                            currentStatus = a.Status ?? "Assigned";
+                        }
+                    }
+                    @currentStatus
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

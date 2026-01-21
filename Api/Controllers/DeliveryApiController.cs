@@ -62,27 +62,97 @@ namespace FoodHub.Api.Controllers
         }
 
             
-        // GET api/delivery/pending
-        [HttpGet("pending")]
-        public async Task<IActionResult> GetPendingOrders()
-        {
-            var orders = await (
-                from o in _db.Orders
-                join u in _db.Users on o.UserId equals u.Id
-                join d in _db.DeliveryInfo on o.Code equals d.Code into deliveryJoin
-                from d in deliveryJoin.DefaultIfEmpty() // LEFT JOIN (important)
-                where o.Status == "Pending"
-                select new
-                {
-                    code = o.Code,
-                    userName = u.FullName,
-                    dilveryName = d.Name,
-                    address = d != null ? d.Address : "Address not available"
-                }
-            ).ToListAsync();
+        // // GET api/delivery/pending
+        // [HttpGet("pending")]
+        // public async Task<IActionResult> GetPendingOrders()
+        // {
+        //     var orders = await (
+        //         from o in _db.Orders
+        //         join u in _db.Users on o.UserId equals u.Id
+        //         join d in _db.DeliveryInfo on o.Code equals d.Code into deliveryJoin
+        //         from d in deliveryJoin.DefaultIfEmpty() // LEFT JOIN (important)
+        //         where o.Status == "Pending"
+        //         select new
+        //         {
+        //             code = o.Code,
+        //             userName = u.FullName,
+        //             dilveryName = d.Name,
+        //             address = d != null ? d.Address : "Address not available"
+        //         }
+        //     ).ToListAsync();
 
-            return Ok(orders);
+        //     return Ok(orders);
+        // }
+
+        [HttpGet("assigned/today/{driverId}")]
+    public async Task<IActionResult> GetTodaysAssignedOrders(string driverId)
+    {
+        // Log the received driverId
+        Console.WriteLine($"[DEBUG] GetTodaysAssignedOrders called with driverId = {driverId}");
+
+        var today = DateTime.Today;
+        Console.WriteLine($"[DEBUG] Today's date = {today.ToShortDateString()}");
+
+        var orders = await (
+            from d in _db.DeliveryOrderAssignments
+            join o in _db.Orders on d.OrderCode equals o.Code
+            join u in _db.Users on o.UserId equals u.Id
+            join p in _db.DeliveryInfo on o.Code equals p.Code
+            where d.DeliveryPersonId == driverId
+                && d.AssignedAt.Date == today
+            select new
+            {
+                orderCode = o.Code,
+                customerName = u.FullName,
+                dilveryName = p.Name,
+                address = p.Address,
+                assignedAt = d.AssignedAt,
+                pickedUpAt = d.PickedUpAt,
+                deliveredAt = d.DeliveredAt,
+                status = d.Status
+            }
+        ).ToListAsync();
+
+        // Log how many orders were retrieved
+        Console.WriteLine($"[DEBUG] Orders retrieved = {orders.Count}");
+
+        // Optionally, log each order for debugging
+        foreach (var order in orders)
+        {
+            Console.WriteLine($"[DEBUG] Order: {order.orderCode}, Customer: {order.customerName}, Address: {order.address}, Status: {order.status}, FullName: {order.dilveryName}");
         }
+
+        return Ok(orders);
+    }
+
+
+        // [HttpGet("assigned/today/{driverId}")]
+        // public async Task<IActionResult> GetTodaysAssignedOrders(string driverId)
+        // {
+        //     var today = DateTime.Today; // get current day
+
+        //     var orders = await (
+        //         from d in _db.DeliveryOrderAssignments
+        //         join o in _db.Orders on d.OrderCode equals o.Code
+        //         join u in _db.Users on o.UserId equals u.Id
+        //         join p in _db.DeliveryInfo on o.Code equals p.Code
+        //         where d.DeliveryPersonId == driverId
+        //             && d.AssignedAt.Date == today // only orders assigned today
+        //         select new
+        //         {
+        //             orderCode = o.Code,
+        //             customerName = u.FullName,
+        //             address = p.Address,
+        //             assignedAt = d.AssignedAt,
+        //             pickedUpAt = d.PickedUpAt,
+        //             deliveredAt = d.DeliveredAt,
+        //             status = d.Status
+        //         }
+        //     ).ToListAsync();
+
+        //     return Ok(orders);
+        // }
+
 
         [HttpGet("order/{code}")]
         public async Task<IActionResult> GetOrderByCode(string code)

@@ -28,7 +28,7 @@ namespace FoodHub.Controllers.Admin
                 .ToListAsync();
 
                     // Manually load related data
-                    var userIds = orders.Select(o => o.UserId).Distinct().ToList();
+            var userIds = orders.Select(o => o.UserId).Distinct().ToList();
             var orderCodes = orders.Select(o => o.Code).ToList();
             var paymentIds = orders.Select(o => o.Id).ToList(); // Payment linked by OrderId
             var deliveryIds = orders.Select(o => o.Id).ToList(); // DeliveryInfo linked by OrderId
@@ -111,9 +111,67 @@ namespace FoodHub.Controllers.Admin
             _context.Update(order);
             await _context.SaveChangesAsync();
 
+            if (status == "Completed")
+            {
+                await AssignDeliveryPerson(order.Code);
+            }
+
+
             TempData["Message"] = $"Order #{order.Code} marked as {status}.";
             return RedirectToAction(nameof(Index));
         }
+
+       private async Task AssignDeliveryPerson(string orderCode)
+        {
+            var today = DateTime.Today;
+
+            if (await _context.DeliveryOrderAssignments
+                .AnyAsync(a => a.OrderCode == orderCode))
+                return;
+
+            var presentDrivers = await _context.DeliveryAttendance
+                .Where(a => a.Date == today && a.IsPresent)
+                .Select(a => a.DeliveryPersonId)
+                .ToListAsync();
+
+            if (!presentDrivers.Any())
+                return;
+
+            var driverLoad = await _context.DeliveryOrderAssignments
+                .Where(a =>
+                    presentDrivers.Contains(a.DeliveryPersonId) &&
+                    a.Status != "Delivered"
+                )
+                .GroupBy(a => a.DeliveryPersonId)
+                .Select(g => new
+                {
+                    DriverId = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var selectedDriver = presentDrivers
+                .Select(d => new
+                {
+                    DriverId = d,
+                    Count = driverLoad.FirstOrDefault(x => x.DriverId == d)?.Count ?? 0
+                })
+                .OrderBy(x => x.Count)
+                .First();
+
+            var assignment = new DeliveryOrderAssignment
+            {
+                OrderCode = orderCode,
+                DeliveryPersonId = selectedDriver.DriverId,
+                AssignedAt = DateTime.UtcNow,
+                Status = "Assigned"
+            };
+
+            _context.DeliveryOrderAssignments.Add(assignment);
+            await _context.SaveChangesAsync();
+        }
+
+
 
         // ✅ Update Payment Status
         [HttpPost]
