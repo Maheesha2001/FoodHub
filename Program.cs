@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using FoodHub.Hubs; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://0.0.0.0:5187");
+builder.Services.AddSignalR();
+
 
 // Hosted service
 builder.Services.AddHostedService<SpecialsStatusService>();
@@ -108,6 +111,7 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+app.MapHub<DeliveryHub>("/deliveryHub");
 
 // Seed roles (Admin, Customer)
 using (var scope = app.Services.CreateScope())

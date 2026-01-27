@@ -5,6 +5,10 @@ using FoodHub.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using FoodHub.Hubs;
+
+
 
 namespace FoodHub.Controllers.Admin
 {
@@ -13,10 +17,16 @@ namespace FoodHub.Controllers.Admin
     public class OrdersController : Controller
     {
         private readonly FoodHubContext _context;
+        private readonly IHubContext<DeliveryHub> _hubContext;
 
-        public OrdersController(FoodHubContext context)
+               
+        public OrdersController(
+            FoodHubContext context,
+            IHubContext<DeliveryHub> hubContext
+        )
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // GET: Admin/Orders
@@ -121,7 +131,8 @@ namespace FoodHub.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-       private async Task AssignDeliveryPerson(string orderCode)
+        
+        private async Task AssignDeliveryPerson(string orderCode)
         {
             var today = DateTime.Today;
 
@@ -159,18 +170,29 @@ namespace FoodHub.Controllers.Admin
                 .OrderBy(x => x.Count)
                 .First();
 
+            // ✅ Assign delivery person
             var assignment = new DeliveryOrderAssignment
             {
                 OrderCode = orderCode,
                 DeliveryPersonId = selectedDriver.DriverId,
-                AssignedAt = DateTime.UtcNow,
+                AssignedAt = DateTime.Today,
                 Status = "Assigned"
             };
 
             _context.DeliveryOrderAssignments.Add(assignment);
+
+            // ✅ AUTO update delivery status
+            var delivery = await _context.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+            if (delivery != null)
+            {
+                delivery.DeliveryStatus = "Out for Delivery";
+                _context.Update(delivery);
+            }
+
             await _context.SaveChangesAsync();
         }
-
 
 
         // ✅ Update Payment Status
@@ -193,25 +215,42 @@ namespace FoodHub.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-        // ✅ Update Delivery Status
+        // ✅ Update Delivery Status (Auto + Manual)
         [HttpPost]
         public async Task<IActionResult> UpdateDeliveryStatus(string orderCode, string status)
         {
-            var order = _context.Orders.FirstOrDefault(o => o.Code == orderCode);
-            if (order == null)
+            var delivery = await _context.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+            if (delivery == null)
                 return NotFound();
 
-            var delivery = _context.DeliveryInfo.FirstOrDefault(d => d.Code == order.Code);
-            if (delivery != null)
-            {
-                delivery.DeliveryStatus = status;
-                _context.Update(delivery);
-                await _context.SaveChangesAsync();
-            }
+            delivery.DeliveryStatus = status;
+            _context.Update(delivery);
+            await _context.SaveChangesAsync();
 
-            TempData["Message"] = $"Delivery for Order #{order.Code} set to {status}.";
+            TempData["Message"] =
+                $"Delivery for Order #{orderCode} set to {status}.";
+
             return RedirectToAction(nameof(Index));
         }
+
+
+       // ✅ Update Delivery Status
+        private async Task SetDeliveryStatus(string orderCode, string status)
+        {
+            var delivery = await _context.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+            if (delivery == null)
+                return;
+
+            delivery.DeliveryStatus = status;
+            _context.Update(delivery);
+            await _context.SaveChangesAsync();
+        }
+
+
     }
 }
 

@@ -62,96 +62,47 @@ namespace FoodHub.Api.Controllers
         }
 
             
-        // // GET api/delivery/pending
-        // [HttpGet("pending")]
-        // public async Task<IActionResult> GetPendingOrders()
-        // {
-        //     var orders = await (
-        //         from o in _db.Orders
-        //         join u in _db.Users on o.UserId equals u.Id
-        //         join d in _db.DeliveryInfo on o.Code equals d.Code into deliveryJoin
-        //         from d in deliveryJoin.DefaultIfEmpty() // LEFT JOIN (important)
-        //         where o.Status == "Pending"
-        //         select new
-        //         {
-        //             code = o.Code,
-        //             userName = u.FullName,
-        //             dilveryName = d.Name,
-        //             address = d != null ? d.Address : "Address not available"
-        //         }
-        //     ).ToListAsync();
-
-        //     return Ok(orders);
-        // }
 
         [HttpGet("assigned/today/{driverId}")]
-    public async Task<IActionResult> GetTodaysAssignedOrders(string driverId)
-    {
-        // Log the received driverId
-        Console.WriteLine($"[DEBUG] GetTodaysAssignedOrders called with driverId = {driverId}");
-
-        var today = DateTime.Today;
-        Console.WriteLine($"[DEBUG] Today's date = {today.ToShortDateString()}");
-
-        var orders = await (
-            from d in _db.DeliveryOrderAssignments
-            join o in _db.Orders on d.OrderCode equals o.Code
-            join u in _db.Users on o.UserId equals u.Id
-            join p in _db.DeliveryInfo on o.Code equals p.Code
-            where d.DeliveryPersonId == driverId
-                && d.AssignedAt.Date == today
-            select new
-            {
-                orderCode = o.Code,
-                customerName = u.FullName,
-                dilveryName = p.Name,
-                address = p.Address,
-                assignedAt = d.AssignedAt,
-                pickedUpAt = d.PickedUpAt,
-                deliveredAt = d.DeliveredAt,
-                status = d.Status
-            }
-        ).ToListAsync();
-
-        // Log how many orders were retrieved
-        Console.WriteLine($"[DEBUG] Orders retrieved = {orders.Count}");
-
-        // Optionally, log each order for debugging
-        foreach (var order in orders)
+        public async Task<IActionResult> GetTodaysAssignedOrders(string driverId)
         {
-            Console.WriteLine($"[DEBUG] Order: {order.orderCode}, Customer: {order.customerName}, Address: {order.address}, Status: {order.status}, FullName: {order.dilveryName}");
+            // Log the received driverId
+            Console.WriteLine($"[DEBUG] GetTodaysAssignedOrders called with driverId = {driverId}");
+
+            var today = DateTime.Today;
+            Console.WriteLine($"[DEBUG] Today's date = {today.ToShortDateString()}");
+
+            var orders = await (
+                from d in _db.DeliveryOrderAssignments
+                join o in _db.Orders on d.OrderCode equals o.Code
+                join u in _db.Users on o.UserId equals u.Id
+                join p in _db.DeliveryInfo on o.Code equals p.Code
+                where d.DeliveryPersonId == driverId
+                    && d.AssignedAt.Date == today && p.DeliveryStatus != "Delivered"
+                select new
+                {
+                    orderCode = o.Code,
+                    customerName = u.FullName,
+                    dilveryName = p.Name,
+                    address = p.Address,
+                    assignedAt = d.AssignedAt,
+                    pickedUpAt = d.PickedUpAt,
+                    deliveredAt = d.DeliveredAt,
+                    status = d.Status
+                }
+            ).ToListAsync();
+
+            // Log how many orders were retrieved
+            Console.WriteLine($"[DEBUG] Orders retrieved = {orders.Count}");
+
+            // Optionally, log each order for debugging
+            foreach (var order in orders)
+            {
+                Console.WriteLine($"[DEBUG] Order: {order.orderCode}, Customer: {order.customerName}, Address: {order.address}, Status: {order.status}, FullName: {order.dilveryName}");
+            }
+
+            return Ok(orders);
         }
-
-        return Ok(orders);
-    }
-
-
-        // [HttpGet("assigned/today/{driverId}")]
-        // public async Task<IActionResult> GetTodaysAssignedOrders(string driverId)
-        // {
-        //     var today = DateTime.Today; // get current day
-
-        //     var orders = await (
-        //         from d in _db.DeliveryOrderAssignments
-        //         join o in _db.Orders on d.OrderCode equals o.Code
-        //         join u in _db.Users on o.UserId equals u.Id
-        //         join p in _db.DeliveryInfo on o.Code equals p.Code
-        //         where d.DeliveryPersonId == driverId
-        //             && d.AssignedAt.Date == today // only orders assigned today
-        //         select new
-        //         {
-        //             orderCode = o.Code,
-        //             customerName = u.FullName,
-        //             address = p.Address,
-        //             assignedAt = d.AssignedAt,
-        //             pickedUpAt = d.PickedUpAt,
-        //             deliveredAt = d.DeliveredAt,
-        //             status = d.Status
-        //         }
-        //     ).ToListAsync();
-
-        //     return Ok(orders);
-        // }
 
 
         [HttpGet("order/{code}")]
@@ -169,6 +120,12 @@ namespace FoodHub.Api.Controllers
                     o.Status,
                     o.CreatedAt,
                     DeliveryStatus = o.DeliveryStatus,
+
+                    PaymentStatus = _db.Payments
+                               .Where(p => p.Code == o.Code)
+                               .Select(p => p.PaymentStatus)
+                               .FirstOrDefault(),
+
                     Items = _db.OrderItems
                                 .Where(i => i.Code == o.Code)
                                 .Select(i => new {
@@ -219,11 +176,11 @@ namespace FoodHub.Api.Controllers
             // Update Order
             order.Status = "Completed";
             order.DeliveryStatus = "Completed";
-            order.DeliveredAt = DateTime.UtcNow;
+            order.DeliveredAt = DateTime.Today;
 
             // Update DeliveryInfo
             deliveryInfo.DeliveryStatus = "Delivered";
-            deliveryInfo.DeliveredAt = DateTime.UtcNow; // optional
+            deliveryInfo.DeliveredAt = DateTime.Today; // optional
 
             // Payments
                 payment.PaymentStatus = "Paid";
@@ -301,6 +258,56 @@ namespace FoodHub.Api.Controllers
             return Ok(new { message = "Attendance marked successfully" });
         }
 
+            // POST: api/DeliveryApi/checkout
+        [HttpPost("checkout")]
+        public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
+        {
+            Console.WriteLine("==== Checkout API Called ====");
+            
+            if (string.IsNullOrEmpty(request.DeliveryPersonId))
+            {
+                Console.WriteLine("DeliveryPersonId is missing in request");
+                return BadRequest("DeliveryPersonId is required");
+            }
+
+            Console.WriteLine($"DeliveryPersonId: {request.DeliveryPersonId}");
+
+            // Find today's attendance record
+            var today = DateTime.Today.Date;
+            Console.WriteLine($"Searching attendance record for date: {today.ToShortDateString()}");
+
+            var attendance = await _db.DeliveryAttendance
+                .FirstOrDefaultAsync(a => a.DeliveryPersonId == request.DeliveryPersonId && a.Date == today);
+
+            if (attendance == null)
+            {
+                Console.WriteLine("No attendance record found for today");
+                return NotFound("Attendance record not found for today");
+            }
+
+            if (attendance.CheckOutTime != null)
+            {
+                Console.WriteLine($"Already checked out at: {attendance.CheckOutTime}");
+                return BadRequest("Already checked out");
+            }
+
+            // Set checkout time
+            attendance.CheckOutTime = DateTime.Now;   // Use Now, not Today
+            Console.WriteLine($"Setting CheckOutTime to: {attendance.CheckOutTime}");
+
+            await _db.SaveChangesAsync();
+            Console.WriteLine("Checkout saved successfully");
+
+            return Ok(new { message = "Checked out successfully", checkoutTime = attendance.CheckOutTime });
+        }
+
+
     
     }
+
+        // DTO for request
+        public class CheckoutRequest
+        {
+            public string DeliveryPersonId { get; set; } = null!;
+        }
 }
