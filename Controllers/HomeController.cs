@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using FoodHub.Models;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace FoodHub.Controllers;
-
+[AllowAnonymous]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;

@@ -133,7 +133,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("MobileApp");
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
