@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0.42
+    container_name: foodhub-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: FoodHub
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: foodhub-backend
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      ConnectionStrings__DefaultConnection: "server=db;port=3306;database=FoodHub;user=root;password=root;"
+    depends_on:
+      - db
+
+volumes:
+  db-data:
