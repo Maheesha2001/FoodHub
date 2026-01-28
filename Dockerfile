@@ -1,25 +1,19 @@
-# 1. Use .NET SDK to build the app
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+# Use .NET 9 SDK for building
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 2. Copy project file and restore dependencies
-COPY FoodHub.csproj .
+# Copy csproj and restore dependencies
+COPY *.csproj ./
 RUN dotnet restore
 
-# 3. Copy everything else and build
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
+# Copy the rest of the project and build
+COPY . ./
+RUN dotnet publish -c Release -o /app
 
-# 4. Runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+# Use .NET 9 runtime for final image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
+COPY --from=build /app ./
+EXPOSE 5187
 
-# 5. Copy published app from build stage
-COPY --from=build /app/publish .
-
-# 6. Expose ports
-EXPOSE 5000
-EXPOSE 5001
-
-# 7. Run the app
 ENTRYPOINT ["dotnet", "FoodHub.dll"]
