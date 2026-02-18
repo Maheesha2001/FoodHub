@@ -169,12 +169,12 @@ namespace FoodHub.Areas.Customer.Controllers
             //return View(new DeliveryInfoViewModel());
            
             var model = new DeliveryInfoViewModel
-{
-    OrderCode = order.Code
-};
-Console.WriteLine($"✅ Passing OrderCode to view: {model.OrderCode}");
+            {
+                OrderCode = order.Code
+            };
+            Console.WriteLine($"✅ Passing OrderCode to view: {model.OrderCode}");
 
-return View(model);
+            return View(model);
         }
 
         [HttpPost]
