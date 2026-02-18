@@ -10,7 +10,7 @@ using FoodHub.Hubs;
 
 
 
-namespace FoodHub.Controllers.Admin
+namespace FoodHub.Areas.Admin.Controllers
 {
 [Area("Admin")]
 [Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
@@ -48,11 +48,11 @@ namespace FoodHub.Controllers.Admin
                 .ToDictionaryAsync(u => u.Id);
 
             var payments = await _context.Payments
-                .Where(p => orderCodes.Contains(p.Code)) // assuming Payment has OrderCode
+                .Where(p => orderCodes.Contains(p.Code))
                 .ToDictionaryAsync(p => p.Code);
 
             var deliveries = await _context.DeliveryInfo
-                .Where(d => orderCodes.Contains(d.Code)) // assuming DeliveryInfo has OrderCode
+                .Where(d => orderCodes.Contains(d.Code)) 
                 .ToDictionaryAsync(d => d.Code);
 
             // Attach related entities manually
@@ -132,27 +132,116 @@ namespace FoodHub.Controllers.Admin
         }
 
         
+        // private async Task AssignDeliveryPerson(string orderCode)
+        // {
+        //     var today = DateTime.Today;
+
+        //     if (await _context.DeliveryOrderAssignments
+        //         .AnyAsync(a => a.OrderCode == orderCode))
+        //         return;
+
+        //     var presentDrivers = await _context.DeliveryAttendance
+        //         .Where(a => a.Date == today && a.IsPresent)
+        //         .Select(a => a.DeliveryPersonId)
+        //         .ToListAsync();
+
+        //         if (!presentDrivers.Any())
+        //             return;
+
+        //     var driverLoad = await _context.DeliveryOrderAssignments
+        //         .Where(a =>
+        //             presentDrivers.Contains(a.DeliveryPersonId) &&
+        //             a.Status != "Delivered"
+        //         )
+        //         .GroupBy(a => a.DeliveryPersonId)
+        //         .Select(g => new
+        //         {
+        //             DriverId = g.Key,
+        //             Count = g.Count()
+        //         })
+        //         .ToListAsync();
+
+        //     var selectedDriver = presentDrivers
+        //         .Select(d => new
+        //         {
+        //             DriverId = d,
+        //             Count = driverLoad.FirstOrDefault(x => x.DriverId == d)?.Count ?? 0
+        //         })
+        //         .OrderBy(x => x.Count)
+        //         .First();
+
+        //     // ✅ Assign delivery person
+        //     var assignment = new DeliveryOrderAssignment
+        //     {
+        //         OrderCode = orderCode,
+        //         DeliveryPersonId = selectedDriver.DriverId,
+        //         AssignedAt = DateTime.Today,
+        //         Status = "Assigned"
+        //     };
+
+        //     _context.DeliveryOrderAssignments.Add(assignment);
+
+        //     // ✅ AUTO update delivery status
+        //     var delivery = await _context.DeliveryInfo
+        //         .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+        //     if (delivery != null)
+        //     {
+        //         delivery.DeliveryStatus = "Out for Delivery";
+        //         _context.Update(delivery);
+        //     }
+
+        //     await _context.SaveChangesAsync();
+        // }
+
         private async Task AssignDeliveryPerson(string orderCode)
         {
-            var today = DateTime.Today;
+            var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
 
+            var today = sriLankaTime.Date;
+
+            // ❌ If already assigned → do nothing
             if (await _context.DeliveryOrderAssignments
                 .AnyAsync(a => a.OrderCode == orderCode))
                 return;
 
+            // var presentDrivers = await _context.DeliveryAttendance
+            //     .Where(a => a.Date == today && a.IsPresent)
+            //     .Select(a => a.DeliveryPersonId)
+            //     .ToListAsync();
+
             var presentDrivers = await _context.DeliveryAttendance
-                .Where(a => a.Date == today && a.IsPresent)
-                .Select(a => a.DeliveryPersonId)
-                .ToListAsync();
+            .Where(a =>
+                a.Date == today &&
+                a.IsPresent &&
+                a.CheckOutTime == null)   // 🔥 must not be checked out
+            .Select(a => a.DeliveryPersonId)
+            .ToListAsync();
 
+            var delivery = await _context.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+            // ❗ If no drivers present → mark waiting
             if (!presentDrivers.Any())
-                return;
+            {
+                if (delivery != null)
+                {
+                    delivery.DeliveryStatus = "Waiting for Driver";
+                    _context.Update(delivery);
+                    await _context.SaveChangesAsync();
+                }
 
+                return;
+            }
+
+            // 🔥 Auto load balancing
             var driverLoad = await _context.DeliveryOrderAssignments
                 .Where(a =>
                     presentDrivers.Contains(a.DeliveryPersonId) &&
-                    a.Status != "Delivered"
-                )
+                    a.Status != "Delivered")
                 .GroupBy(a => a.DeliveryPersonId)
                 .Select(g => new
                 {
@@ -170,20 +259,18 @@ namespace FoodHub.Controllers.Admin
                 .OrderBy(x => x.Count)
                 .First();
 
-            // ✅ Assign delivery person
             var assignment = new DeliveryOrderAssignment
             {
                 OrderCode = orderCode,
                 DeliveryPersonId = selectedDriver.DriverId,
-                AssignedAt = DateTime.Today,
+                AssignedAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                DateTime.UtcNow,
+                                "Sri Lanka Standard Time"
+                            ),
                 Status = "Assigned"
             };
 
             _context.DeliveryOrderAssignments.Add(assignment);
-
-            // ✅ AUTO update delivery status
-            var delivery = await _context.DeliveryInfo
-                .FirstOrDefaultAsync(d => d.Code == orderCode);
 
             if (delivery != null)
             {
@@ -193,7 +280,6 @@ namespace FoodHub.Controllers.Admin
 
             await _context.SaveChangesAsync();
         }
-
 
         // ✅ Update Payment Status
         [HttpPost]
@@ -250,6 +336,103 @@ namespace FoodHub.Controllers.Admin
             await _context.SaveChangesAsync();
         }
 
+        // public async Task<IActionResult> AssignDriver(string orderCode)
+        // {
+        //      var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+        //             DateTime.UtcNow,
+        //             "Sri Lanka Standard Time"
+        //         );
+
+        //     var today = sriLankaTime.Date;
+
+        //     // var presentDriverIds = await _context.DeliveryAttendance
+        //     //     .Where(a => a.Date == today && a.IsPresent)
+        //     //     .Select(a => a.DeliveryPersonId)
+        //     //     .ToListAsync();
+
+        //     var presentDrivers = await _context.DeliveryAttendance
+        //     .Where(a =>
+        //         a.Date == today &&
+        //         a.IsPresent &&
+        //         a.CheckOutTime == null)   // 🔥 must not be checked out
+        //     .Select(a => a.DeliveryPersonId)
+        //     .ToListAsync();
+
+        //     var drivers = await _context.DeliveryPerson
+        //         .Where(d => presentDriverIds.Contains(d.Id))
+        //         .ToListAsync();
+
+        //     ViewBag.OrderCode = orderCode;
+
+        //     return View(drivers);
+        // }
+
+        public async Task<IActionResult> AssignDriver(string orderCode)
+        {
+            var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow,
+                "Sri Lanka Standard Time"
+            );
+
+            var today = sriLankaTime.Date;
+
+            var presentDrivers = await _context.DeliveryAttendance
+                .Where(a =>
+                    a.Date == today &&
+                    a.IsPresent &&
+                    a.CheckOutTime == null)
+                .Select(a => a.DeliveryPersonId)
+                .ToListAsync();
+
+            var drivers = await _context.DeliveryPerson
+                .Where(d => presentDrivers.Contains(d.Id))
+                .ToListAsync();
+
+            ViewBag.OrderCode = orderCode;
+
+            return View(drivers);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmAssignDriver(string orderCode, string driverId)
+        {
+            var alreadyAssigned = await _context.DeliveryOrderAssignments
+                .AnyAsync(a => a.OrderCode == orderCode);
+
+            if (alreadyAssigned)
+            {
+                TempData["Message"] = "Order already assigned.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var assignment = new DeliveryOrderAssignment
+            {
+                OrderCode = orderCode,
+                DeliveryPersonId = driverId,
+                AssignedAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                DateTime.UtcNow,
+                                "Sri Lanka Standard Time"
+                            ),
+                Status = "Assigned"
+            };
+
+            _context.DeliveryOrderAssignments.Add(assignment);
+
+            var delivery = await _context.DeliveryInfo
+                .FirstOrDefaultAsync(d => d.Code == orderCode);
+
+            if (delivery != null)
+            {
+                delivery.DeliveryStatus = "Out for Delivery";
+                _context.Update(delivery);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Driver assigned successfully.";
+
+            return RedirectToAction(nameof(Index));
+        }
 
     }
 }

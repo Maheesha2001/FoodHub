@@ -102,105 +102,7 @@ namespace FoodHub.Areas.Admin.Controllers
             return "EmpDel" + number.ToString("D3");
         }
 
-                // // GET: Admin/DeliveryPerson/Edit/5
-                // public async Task<IActionResult> Edit(int id)
-                // {
-                //     var deliveryPerson = await _context.DeliveryPerson.FindAsync(id);
-                //     if (deliveryPerson == null)
-                //     {
-                //         return NotFound();
-                //     }
-
-                //     return View(deliveryPerson);
-                // }
-
-                // // POST: Admin/DeliveryPerson/Edit/5
-                // [HttpPost]
-                // [ValidateAntiForgeryToken]
-                // public async Task<IActionResult> Edit(int id, DeliveryPerson model)
-                // {
-                //     Console.WriteLine($"Edit POST called for Id: {id}");
-
-                //     if (id != model.Id)
-                //     {
-                //         Console.WriteLine("ID mismatch!");
-                //         return BadRequest();
-                //     }
-
-                //     // if (!ModelState.IsValid)
-                //     // {
-                //     //     Console.WriteLine("Model state invalid!");
-                //     //     return View(model);
-                //     // }
-
-                //     if (!ModelState.IsValid)
-                //     {
-                //         foreach (var key in ModelState.Keys)
-                //         {
-                //             var errors = ModelState[key].Errors;
-                //             foreach (var error in errors)
-                //             {
-                //                 Console.WriteLine($"Validation failed for {key}: {error.ErrorMessage}");
-                //             }
-                //         }
-                //         return View(model);
-                //     }
-
-
-                //     var existingUser = await _context.DeliveryPerson.FindAsync(id);
-                //     if (existingUser == null)
-                //     {
-                //         Console.WriteLine("Existing user not found in DB!");
-                //         return NotFound();
-                //     }
-
-                //     Console.WriteLine("Existing user loaded successfully.");
-
-                //     // Update only fields that have changed & are not null
-                //     if (!string.IsNullOrWhiteSpace(model.Name) && model.Name != existingUser.Name)
-                //     {
-                //         existingUser.Name = model.Name;
-                //         Console.WriteLine($"Name updated to: {model.Name}");
-                //     }
-
-                //     if (!string.IsNullOrWhiteSpace(model.Email) && model.Email != existingUser.Email)
-                //     {
-                //         existingUser.Email = model.Email;
-                //         Console.WriteLine($"Email updated to: {model.Email}");
-                //     }
-
-                //     if (!string.IsNullOrWhiteSpace(model.NIC) && model.NIC != existingUser.NIC)
-                //     {
-                //         existingUser.NIC = model.NIC;
-                //         Console.WriteLine($"NIC updated to: {model.NIC}");
-                //     }
-
-                //     if (!string.IsNullOrWhiteSpace(model.PhoneNumber) && model.PhoneNumber != existingUser.PhoneNumber)
-                //     {
-                //         existingUser.PhoneNumber = model.PhoneNumber;
-                //         Console.WriteLine($"PhoneNumber updated to: {model.PhoneNumber}");
-                //     }
-
-                //     // Boolean fields: always take the submitted value
-                //     existingUser.FingerprintEnabled = model.FingerprintEnabled;
-                //     Console.WriteLine($"FingerprintEnabled set to: {model.FingerprintEnabled}");
-
-                //     existingUser.IsActive = model.IsActive;
-                //     Console.WriteLine($"IsActive set to: {model.IsActive}");
-
-                //     // Timestamp
-                //     existingUser.UpdatedAt = DateTime.UtcNow;
-                //     Console.WriteLine($"UpdatedAt set to: {existingUser.UpdatedAt}");
-
-                //     await _context.SaveChangesAsync();
-                //     Console.WriteLine("Changes saved to DB successfully.");
-
-                //     TempData["SuccessMessage"] = "Delivery person updated successfully!";
-                //     return RedirectToAction("Index");
-                // }
-
-
-
+                
         // GET: Admin/DeliveryPerson/Edit/EmpDel001
         public async Task<IActionResult> Edit(string id)
         {
@@ -262,8 +164,13 @@ namespace FoodHub.Areas.Admin.Controllers
 
         public async Task<IActionResult> PresentDrivers()
         {
-                var today = DateTime.Today;
+                //var today = DateTime.Today;
+                var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
 
+                var today = sriLankaTime.Date;
 
                 var attendance = await _context.DeliveryAttendance
                     .Where(a => a.Date == today && a.IsPresent)
@@ -276,34 +183,64 @@ namespace FoodHub.Areas.Admin.Controllers
                     DeliveryPersonId = a.DeliveryPersonId,
                     Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
                     NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
-                    CheckInTime = a.CheckInTime
+                    CheckInTime = a.CheckInTime,
+                    CheckOutTime = a.CheckOutTime,
+                    Date = a.Date
                 }).ToList();
 
                 return View("Attendance", result);
-            }   
+        }   
 
 
+        // public async Task<IActionResult> PresentDriversHistory()
+        // {
+        //     var attendance = await _context.DeliveryAttendance
+        //         .OrderByDescending(a => a.Date) 
+        //         .ToListAsync();
+
+        //     var drivers = await _context.DeliveryPerson.ToListAsync();
+
+        //     var result = attendance.Select(a => new PresentDriverVM
+        //         {
+        //             DeliveryPersonId = a.DeliveryPersonId,
+        //             Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
+        //             NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
+        //             CheckInTime = a.CheckInTime,
+        //              CheckOutTime = a.CheckOutTime,
+        //             Date = a.Date
+        //         }).ToList();
+
+        //         return View("AttendanceHistory", result);
+        // }      
+           
         public async Task<IActionResult> PresentDriversHistory()
         {
-            var attendance = await _context.DeliveryAttendance
+            var result = await _context.DeliveryAttendance
+                .OrderByDescending(a => a.Date)
+                .ThenByDescending(a => a.CheckInTime)
+                .Join(_context.DeliveryPerson,
+                    attendance => attendance.DeliveryPersonId,
+                    driver => driver.Id,
+                    (attendance, driver) => new PresentDriverVM
+                    {
+                        DeliveryPersonId = attendance.DeliveryPersonId,
+                        Name = driver.Name,
+                        NIC = driver.NIC,
+                        CheckInTime = attendance.CheckInTime,
+                        CheckOutTime = attendance.CheckOutTime,
+                        Date = attendance.Date
+                    })
                 .ToListAsync();
 
-            var drivers = await _context.DeliveryPerson.ToListAsync();
+            return View("AttendanceHistory", result);
+        }
 
-            var result = attendance.Select(a => new PresentDriverVM
-                {
-                    DeliveryPersonId = a.DeliveryPersonId,
-                    Name = drivers.First(d => d.Id == a.DeliveryPersonId).Name,
-                    NIC = drivers.First(d => d.Id == a.DeliveryPersonId).NIC,
-                    CheckInTime = a.CheckInTime
-                }).ToList();
 
-                return View("AttendanceHistory", result);
-        }      
-           
+
         public async Task<IActionResult> DeliveryAssign()
         {
                var assignments = await _context.DeliveryOrderAssignments
+                .OrderByDescending(a => a.AssignedAt)
                 .ToListAsync();
 
                 return View("DeliveryOrderAssignments", assignments);

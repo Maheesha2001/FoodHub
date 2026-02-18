@@ -1,19 +1,31 @@
-# Use .NET 9 SDK for building
+# =========================
+# BUILD STAGE
+# =========================
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY *.csproj ./
+COPY FoodHub.csproj ./
 RUN dotnet restore
 
-# Copy the rest of the project and build
-COPY . ./
-RUN dotnet publish -c Release -o /app
+COPY . .
+RUN dotnet publish FoodHub.csproj -c Release -o /app/publish
 
-# Use .NET 9 runtime for final image
+# =========================
+# RUNTIME STAGE
+# =========================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build /app ./
-EXPOSE 5187
 
-ENTRYPOINT ["dotnet", "FoodHub.dll"]
+RUN apt-get update && \
+    apt-get install -y default-mysql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /app/publish .
+
+COPY wait-for-db.sh .
+RUN chmod +x wait-for-db.sh
+
+EXPOSE 5187
+ENV ASPNETCORE_URLS=http://0.0.0.0:5187
+
+ENTRYPOINT ["./wait-for-db.sh"]

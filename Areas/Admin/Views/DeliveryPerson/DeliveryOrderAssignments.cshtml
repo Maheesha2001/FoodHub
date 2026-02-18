@@ -3,10 +3,31 @@
 @{
     ViewData["Title"] = "Delivery Persons";
    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    string lastDate = null;
+    int colorIndex = -1;
+
+    var sortedModel = Model
+        .OrderByDescending(a => a.AssignedAt)
+        .ToList();
 }
 
 <div class="container mt-5">
 <h2>Delivery Assignments</h2>
+
+     <div class="d-flex justify-content-end gap-2 mb-3">
+        <div class="text-center">
+            <a asp-action="Index" class="btn btn-secondary">Back</a>
+        </div>
+        <div class="text-center">
+            <a asp-area="Admin"
+            asp-controller="Dashboard"
+            asp-action="Index"
+            class="btn btn-primary">
+                Dashboard
+            </a>     
+        </div>  
+    </div>
 
 <table class="table">
     <thead>
@@ -18,32 +39,53 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var a in Model)
+        @foreach (var a in sortedModel)
         {
-            <tr>
-                <td>@a.OrderCode</td>
-                <td>@a.DeliveryPersonId</td> <!-- use Id for now -->
-                <td>@a.AssignedAt.ToShortDateString()</td> <!-- correct property -->
-                <td>
-                    @{
-                        string currentStatus;
-                        if (a.DeliveredAt.HasValue)
-                        {
-                            currentStatus = "Delivered";
-                        }
-                        else if (a.PickedUpAt.HasValue)
-                        {
-                            currentStatus = "Picked Up";
-                        }
-                        else
-                        {
-                            currentStatus = a.Status ?? "Assigned";
-                        }
-                    }
-                    @currentStatus
-                </td>
+            var currentDate = a.AssignedAt.ToString("yyyy-MM-dd");
 
+            if (lastDate != currentDate)
+            {
+                colorIndex = (colorIndex + 1) % 7;
+                lastDate = currentDate;
+            }
+
+            string currentStatus;
+            if (a.DeliveredAt.HasValue)
+            {
+                currentStatus = "Delivered";
+            }
+            else if (a.PickedUpAt.HasValue)
+            {
+                currentStatus = "Picked Up";
+            }
+            else
+            {
+                currentStatus = a.Status ?? "Assigned";
+            }
+
+            <tr class="@GetRowClass(colorIndex)">
+                <td>@a.OrderCode</td>
+                <td>@a.DeliveryPersonId</td>
+                <td>@a.AssignedAt.ToString("dd-MM-yyyy")</td>
+                <td>@currentStatus</td>
             </tr>
         }
-    </tbody>
+        </tbody>
 </table>
+
+@functions {
+    string GetRowClass(int colorIndex)
+    {
+        return colorIndex switch
+        {
+            0 => "table-primary",
+            1 => "table-success",
+            2 => "table-info",
+            3 => "table-warning text-dark",
+            4 => "table-danger",
+            5 => "table-secondary",
+            6 => "table-dark text-white",
+            _ => ""
+        };
+    }
+}

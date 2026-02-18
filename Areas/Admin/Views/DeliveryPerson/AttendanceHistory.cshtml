@@ -2,43 +2,98 @@
 
 @{
     ViewData["Title"] = "Delivery Persons";
-   Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    // 7 colors array (Bootstrap + theme friendly)
+    var colors = new[]
+    {
+        "rgba(var(--bs-primary-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-success-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-info-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-warning-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-danger-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-secondary-rgb), var(--bs-text-opacity))",
+        "rgba(var(--bs-dark-rgb), var(--bs-text-opacity))"
+    };
+
+    string lastDate = null;
+    int colorIndex = -1;
+
+    // Sort the model by Date descending, then CheckInTime descending
+    var sortedModel = Model.OrderByDescending(d => d.Date).ThenByDescending(d => d.CheckInTime).ToList();
 }
 
 <div class="container mt-5">
-<h2>Attendance History</h2>
+    <h2>
+        Attendance History 
+        <small class="text-muted"> 
+            (@DateTime.UtcNow.AddHours(5).AddMinutes(30).ToString("dd-MM-yyyy HH:mm:ss"))
+        </small>
+    </h2>
 
-<table class="table table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Driver ID</th>
-            <th>Name</th>
-            <th>NIC</th>
-            <th>Check In Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var d in Model)
-        {
-            <tr>
-                <td>@d.DeliveryPersonId</td>
-                <td>@d.Name</td>
-                <td>@d.NIC</td>
-                <td>@(d.CheckInTime?.ToString("hh:mm tt") ?? "-")</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<div class="text-center">
-        <a asp-action="Index" class="btn btn-secondary mt-2; width: 10%">Back</a>
-         <div>
-        <a asp-area="Admin"
+    
+     <div class="d-flex justify-content-end gap-2 mb-3">
+        <div class="text-center">
+            <a asp-action="Index" class="btn btn-secondary"">Back</a>
+        </div>
+        <div class="text-center">
+            <a asp-area="Admin"
             asp-controller="Dashboard"
             asp-action="Index"
             class="btn btn-primary">
                 Dashboard
-            </a>
-        </div>
+            </a>     
+        </div>  
     </div>
+
+    <table class="table table-bordered mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Driver ID</th>
+                <th>Name</th>
+                <th>NIC</th>
+                <th>Check In Time</th>
+                <th>Check Out Time</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+           @foreach (var d in sortedModel)
+            {
+                // Change color only if the date changes
+                if (lastDate != d.Date?.ToString("yyyy-MM-dd"))
+                {
+                    colorIndex = (colorIndex + 1) % colors.Length;
+                    lastDate = d.Date?.ToString("yyyy-MM-dd");
+                }
+                var textColor = (colorIndex == 3 || colorIndex == 6) ? "white" : "black";
+
+                <tr class="@GetRowClass(colorIndex)">
+                    <td>@d.DeliveryPersonId</td>
+                    <td>@d.Name</td>
+                    <td>@d.NIC</td>
+                    <td>@(d.CheckInTime?.ToString("hh:mm tt") ?? "-")</td>
+                    <td>@(d.CheckOutTime?.ToString("hh:mm tt") ?? "-")</td>
+                    <td>@(d.Date?.ToString("dd-MM-yyyy") ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
+
+@functions {
+    string GetRowClass(int colorIndex)
+    {
+        return colorIndex switch
+        {
+            0 => "table-primary",
+            1 => "table-success",
+            2 => "table-info",
+            3 => "table-warning text-white",
+            4 => "table-danger",
+            5 => "table-secondary",
+            6 => "table-dark text-white",
+            _ => ""
+        };
+    }
+}

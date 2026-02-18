@@ -48,7 +48,10 @@ namespace FoodHub.Controllers
                     {
                         UserId = userId,
                         Code = CodeGenerator.GenerateFexCode(),
-                        CreatedAt = DateTime.Now
+                        CreatedAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                        DateTime.UtcNow,
+                                        "Sri Lanka Standard Time"
+                                    )
                     };
                     _db.Carts.Add(cart);
                     _db.SaveChanges();
@@ -147,7 +150,10 @@ namespace FoodHub.Controllers
                     {
                         UserId = userId,
                         Code = CodeGenerator.GenerateFexCode(),
-                        CreatedAt = DateTime.Now
+                        CreatedAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                    DateTime.UtcNow,
+                                    "Sri Lanka Standard Time"
+                                )
                     };
                     _db.Carts.Add(cart);
                     _db.SaveChanges();
@@ -251,7 +257,10 @@ public async Task<IActionResult> AddSpecialToCart([FromBody] CartSpecialDto dto)
             UserId = userId,
             Code = CodeGenerator.GenerateFexCode(),
             Status = "Active",
-            CreatedAt = DateTime.Now
+            CreatedAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                            DateTime.UtcNow,
+                            "Sri Lanka Standard Time"
+                        )
         };
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync();

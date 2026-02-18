@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace FoodHub.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(AuthenticationSchemes = "AdminScheme", Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class DashboardController : Controller
     {
         private readonly FoodHubContext _context;
@@ -31,7 +31,10 @@ namespace FoodHub.Areas.Admin.Controllers
                 .Include(s => s.SpecialItems)
                 .ToListAsync();
 
-            var now = DateTime.Now;
+            var now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                            DateTime.UtcNow,
+                            "Sri Lanka Standard Time"
+                        );
 
             // Get item names
             var pizzas = await _context.Pizzas.ToDictionaryAsync(p => p.Id, p => p.Name);

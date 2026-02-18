@@ -15,7 +15,12 @@ public class AttendanceController : ControllerBase
     [HttpPost("checkin")]
     public async Task<IActionResult> CheckIn(string driverId)
     {
-        var today = DateTime.UtcNow.Date;
+        var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
+
+        var today = sriLankaTime.Date;
 
         var record = await _context.DeliveryAttendance
             .FirstOrDefaultAsync(x => x.DeliveryPersonId == driverId && x.Date == today);
@@ -27,13 +32,13 @@ public class AttendanceController : ControllerBase
                 DeliveryPersonId = driverId,
                 Date = today,
                 IsPresent = true,
-                CheckInTime = DateTime.UtcNow
+                CheckInTime = sriLankaTime
             });
         }
         else
         {
             record.IsPresent = true;
-            record.CheckInTime = DateTime.UtcNow;
+            record.CheckInTime = sriLankaTime;
         }
 
         await _context.SaveChangesAsync();
@@ -43,14 +48,20 @@ public class AttendanceController : ControllerBase
     [HttpPost("checkout")]
     public async Task<IActionResult> CheckOut(string driverId)
     {
-        var today = DateTime.UtcNow.Date;
+        var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
+
+        var today = sriLankaTime.Date;
+
         var record = await _context.DeliveryAttendance
             .FirstOrDefaultAsync(x => x.DeliveryPersonId == driverId && x.Date == today);
 
         if (record != null)
         {
             record.IsPresent = false;
-            record.CheckOutTime = DateTime.UtcNow;
+            record.CheckOutTime = sriLankaTime;
             await _context.SaveChangesAsync();
         }
 

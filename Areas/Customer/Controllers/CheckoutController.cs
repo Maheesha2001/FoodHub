@@ -309,8 +309,9 @@ return View(model);
                 string subject = $"Order Confirmation - Order {order.Code}";
 
                 // string orderUrl = $"http://localhost:5187/MyOrders/Details/{order.Code}"; // ✅ use Code
-                string orderUrl = $"http://localhost:5187/MyOrders/Details?orderCode={order.Code}"; // ✅ use Code with query string
-
+                //string orderUrl = $"http://localhost:5187/MyOrders/Details?orderCode={order.Code}"; // ✅ use Code with query string
+                string baseUrl = "https://improved-guacamole-97xv7w95rqxj3jj7-5187.app.github.dev";
+                string orderUrl = $"{baseUrl}/MyOrders/Details?orderCode={order.Code}";
                 string body = $@"
                 <html>
                 <body style='font-family: Arial, sans-serif; background-color:#f9f9f9; padding: 30px;'>
