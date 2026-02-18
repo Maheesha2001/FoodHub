@@ -291,6 +291,14 @@ if (special.FinalPrice.HasValue)
 existingSpecial.StartDate = special.StartDate;
 existingSpecial.EndDate = special.EndDate;
 
+var today = DateTime.UtcNow.Date;
+
+existingSpecial.IsActive =
+    existingSpecial.StartDate.HasValue &&
+    existingSpecial.EndDate.HasValue &&
+    today >= existingSpecial.StartDate.Value.Date &&
+    today <= existingSpecial.EndDate.Value.Date;
+
             if (!string.IsNullOrEmpty(special.ImageName))
                 existingSpecial.ImageName = special.ImageName;
 

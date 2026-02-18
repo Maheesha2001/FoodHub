@@ -1,0 +1,39 @@
+@model List<FoodHub.Models.DeliveryPerson>
+
+@{
+    ViewData["Title"] = "Assign Driver";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <h4 class="mb-4">Assign Delivery Driver</h4>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-danger">
+            No drivers are present today.
+        </div>
+    }
+    else
+    {
+        <form asp-action="ConfirmAssignDriver" method="post">
+            <input type="hidden" name="orderCode" value="@ViewBag.OrderCode" />
+
+            <div class="mb-3">
+                <label>Select Driver</label>
+                <select name="driverId" class="form-select">
+                    @foreach (var driver in Model)
+                    {
+                        <option value="@driver.Id">
+                            @driver.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                Assign Driver
+            </button>
+        </form>
+    }
+</div>

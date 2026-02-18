@@ -28,7 +28,7 @@ namespace FoodHub.Areas.Admin.Controllers
 
         // GET: Admin/Beverages/Create
         public IActionResult Create() => 
-    View("~/Areas/Admin/Views/Dashboard/_AddBeverages.cshtml", new Beverage());
+        View("~/Areas/Admin/Views/Dashboard/_AddBeverages.cshtml", new Beverage());
 
         // POST: Admin/Beverages/Create
         [HttpPost]

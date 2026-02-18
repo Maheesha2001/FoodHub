@@ -69,7 +69,13 @@ namespace FoodHub.Api.Controllers
             // Log the received driverId
             Console.WriteLine($"[DEBUG] GetTodaysAssignedOrders called with driverId = {driverId}");
 
-            var today = DateTime.Today;
+           // var today = DateTime.Today;
+            var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
+
+            var today = sriLankaTime.Date;
             Console.WriteLine($"[DEBUG] Today's date = {today.ToShortDateString()}");
 
             var orders = await (
@@ -157,6 +163,7 @@ namespace FoodHub.Api.Controllers
         [HttpPost("mark-delivered/{code}")]
         public async Task<IActionResult> MarkDelivered(string code)
         {
+            var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Sri Lanka Standard Time");
             var order = await _db.Orders
                 .FirstOrDefaultAsync(o => o.Code == code);
 
@@ -176,11 +183,11 @@ namespace FoodHub.Api.Controllers
             // Update Order
             order.Status = "Completed";
             order.DeliveryStatus = "Completed";
-            order.DeliveredAt = DateTime.Today;
+            order.DeliveredAt = sriLankaTime;
 
             // Update DeliveryInfo
             deliveryInfo.DeliveryStatus = "Delivered";
-            deliveryInfo.DeliveredAt = DateTime.Today; // optional
+            deliveryInfo.DeliveredAt = sriLankaTime; // optional
 
             // Payments
                 payment.PaymentStatus = "Paid";
@@ -210,7 +217,10 @@ namespace FoodHub.Api.Controllers
                 order.Payment.PaymentStatus = paymentReceived ? "Completed" : "Pending";
 
             order.DeliveryInfo ??= new DeliveryInfo(); // Ensure delivery info exists
-            order.DeliveryInfo.DeliveredAt = DateTime.Now;
+            order.DeliveryInfo.DeliveredAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                                DateTime.UtcNow,
+                                                "Sri Lanka Standard Time"
+                                            );
 
             await _db.SaveChangesAsync();
 
@@ -249,7 +259,10 @@ namespace FoodHub.Api.Controllers
                 DeliveryPersonId = deliveryPersonId, // ✅ string
                 Date = parsedDate,
                 IsPresent = true,
-                CheckInTime = DateTime.Now
+                CheckInTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                DateTime.UtcNow,
+                                "Sri Lanka Standard Time"
+                            )
             };
 
             _db.DeliveryAttendance.Add(attendance);
@@ -273,7 +286,13 @@ namespace FoodHub.Api.Controllers
             Console.WriteLine($"DeliveryPersonId: {request.DeliveryPersonId}");
 
             // Find today's attendance record
-            var today = DateTime.Today.Date;
+           // var today = DateTime.Today.Date;
+            var sriLankaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Sri Lanka Standard Time"
+                );
+
+        var today = sriLankaTime.Date;
             Console.WriteLine($"Searching attendance record for date: {today.ToShortDateString()}");
 
             var attendance = await _db.DeliveryAttendance
@@ -292,7 +311,10 @@ namespace FoodHub.Api.Controllers
             }
 
             // Set checkout time
-            attendance.CheckOutTime = DateTime.Now;   // Use Now, not Today
+            attendance.CheckOutTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                                        DateTime.UtcNow,
+                                        "Sri Lanka Standard Time"
+                                    );   // Use Now, not Today
             Console.WriteLine($"Setting CheckOutTime to: {attendance.CheckOutTime}");
 
             await _db.SaveChangesAsync();

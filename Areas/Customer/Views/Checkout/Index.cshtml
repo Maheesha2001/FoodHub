@@ -1,21 +1,22 @@
+
 @model List<FoodHub.ViewModels.Checkout.CartItemViewModel>
 
 @{
     ViewData["Title"] = "Checkout - Cart Review";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var cartCode = (Model != null && Model.Any())
+        ? Model.FirstOrDefault()?.Code ?? ""
+        : "";
 }
 
 <div style="min-height:100vh; padding:40px;">
-    <div class="checkout-steps mb-4">
-        <ul class="steps d-flex justify-content-between list-unstyled">
-            <li class="step active"><span class="step-title">Shopping Cart</span></li>
-            <li class="step"><span class="step-number">2</span><span class="step-title">Delivery Information</span></li>
-            <li class="step"><span class="step-number">3</span><span class="step-title">Confirmation & Payment</span></li>
-        </ul>
-    </div>
+
+
 
     <h2 class="mb-4">Checkout: Cart Review</h2>
 
+    <!-- ✅ CART TABLE -->
     <table class="table table-striped">
         <thead>
             <tr>
@@ -37,75 +38,46 @@
         </tfoot>
     </table>
 
-    <div class="d-flex justify-content-between">
-        <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
-       @* <a class="btn btn-primary" href="@Url.Action("DeliveryInfo", "Checkout",  new { area = "Customer" })">
-    Next: Delivery Info →
-</a> *@
-@* <a class="btn btn-primary"
-   href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = TempData["FrozenOrderCode"] })">
-    Next: Delivery Info c→
-</a> *@
-  @{
-    var cartCode = (Model != null && Model.Any()) ? Model.FirstOrDefault()?.Code ?? "" : "";
-}
-
-
-<div class="d-flex justify-content-between">
-    <a class="btn btn-secondary" href="/Customer/Menu">← Continue Shopping</a>
-
-    @if (!string.IsNullOrEmpty(cartCode))
-    {
-        <a class="btn btn-primary"
-           href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = cartCode })">
-            Next: Delivery Info →
+    <div class="d-flex justify-content-between mt-4">
+    <!-- Continue Shopping Button -->
+        <a class="btn btn-secondary" href="/Customer/Menu">
+            Continue Shopping
         </a>
-    }
-    else
-    {
-        <a class="btn btn-primary disabled">Next: Delivery Info →</a>
-    }
-</div>
 
-
-
+        <!-- Delivery Information Button -->
+        @if (!string.IsNullOrEmpty(cartCode))
+        {
+            <a class="btn btn-primary"
+            href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = cartCode })">
+                Delivery Information
+            </a>
+        }
+        else
+        {
+            <button class="btn btn-primary disabled">
+                Delivery Information
+            </button>
+        }
     </div>
+
 </div>
 
 @section Scripts {
 <script>
- const getCartUrl = '@Url.Action("GetCartItems", "Cart", new { area = "" })';
+const getCartUrl = '@Url.Action("GetCartItems", "Cart", new { area = "" })';
 const updateQtyUrl = '@Url.Action("UpdateItemQuantity", "Cart", new { area = "" })';
-//const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
-//const removeItemUrl = '@Url.Action("RemoveItem", "Cart", new { area = "" })';
 const removeItemUrl = '@Url.Content("~/Cart/RemoveItem")';
-
 const saveCheckoutUrl = '@Url.Action("SaveCheckoutCart", "Cart", new { area = "" })';
-@* const isFrozen = @((TempData["FrozenOrderId"] != null) ? "true" : "false"); *@
 
 let isFrozen = false;
-
-@* async function checkFrozenStatus() {
-    try {
-        const res = await fetch("/Customer/Checkout/IsCartFrozen");
-        const data = await res.json();
-        isFrozen = data.frozen;
-        console.log("DB Frozen Check →", isFrozen);
-    } catch (err) {
-        console.error("Error checking frozen status:", err);
-    }
-} *@
 
 async function checkFrozenStatus() {
     try {
         const res = await fetch("/Customer/Checkout/IsCartFrozen", {
-            credentials: "same-origin"  // ensures cookies are sent
+            credentials: "same-origin"
         });
 
-        if (!res.ok) {
-            console.error("HTTP error", res.status);
-            return;
-        }
+        if (!res.ok) return;
 
         const data = await res.json();
         isFrozen = data.frozen;
@@ -114,7 +86,6 @@ async function checkFrozenStatus() {
         console.error("Error checking frozen status:", err);
     }
 }
-
 
 async function loadCart() {
     try {
@@ -133,85 +104,50 @@ async function loadCart() {
         let html = "";
         let total = 0;
 
-        
         data.items.forEach((item) => {
-    const lineTotal = item.price * item.quantity;
-    total += lineTotal;
+            const lineTotal = item.price * item.quantity;
+            total += lineTotal;
 
-    // Freeze inputs/buttons if isFrozen
-let qtyInput = "";
-let removeBtn = "";
+            let qtyInput = "";
+            let removeBtn = "";
 
-    if(isFrozen){
-        qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" disabled />` ;
-        removeBtn = "";
-        console.log("Correct is frozen");
-    } else {
-       // qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" min="1" style="width:80px;" />`;
-          qtyInput = `
-        <div class="d-flex align-items-center qty-control" style="gap:5px;">
-            <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="dec" data-id="${item.id}" data-type="${item.type}">
-                <i class="bi bi-dash"></i>
-            </button>
-            <input type="number" class="form-control text-center quantity-input" 
-                value="${item.quantity}" min="1" style="width:70px;" readonly />
-            <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="inc" data-id="${item.id}" data-type="${item.type}">
-                <i class="bi bi-plus"></i>
-            </button>
-        </div>`;
-        removeBtn = `<button type="button" class="btn btn-sm btn-danger remove-item">X</button>`;
-        console.log("WRONG is frozen");
-    }
-      
-   
-    html += `
-        <tr data-id="${item.id}" data-type="${item.type}">
-            <td>${item.name}</td>
-            <td>${item.type}</td>
-            <td>${qtyInput}</td>
-            <td class="unit-price">${item.price.toFixed(2)}</td>
-            <td class="line-total">${lineTotal.toFixed(2)}</td>
-            <td>${removeBtn}</td>
-        </tr>`;
-});
+            if (isFrozen) {
+                qtyInput = `<input type="number" class="form-control quantity-input" value="${item.quantity}" disabled />`;
+                removeBtn = "";
+            } else {
+                qtyInput = `
+                    <div class="d-flex align-items-center qty-control" style="gap:5px;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="dec" data-id="${item.id}" data-type="${item.type}">-</button>
+                        <input type="number" class="form-control text-center quantity-input"
+                               value="${item.quantity}" min="1" style="width:70px;" readonly />
+                        <button type="button" class="btn btn-outline-secondary btn-sm qty-btn" data-action="inc" data-id="${item.id}" data-type="${item.type}">+</button>
+                    </div>`;
+                removeBtn = `<button type="button" class="btn btn-sm btn-danger remove-item">X</button>`;
+            }
 
+            html += `
+                <tr data-id="${item.id}" data-type="${item.type}">
+                    <td>${item.name}</td>
+                    <td>${item.type}</td>
+                    <td>${qtyInput}</td>
+                    <td class="unit-price">${item.price.toFixed(2)}</td>
+                    <td class="line-total">${lineTotal.toFixed(2)}</td>
+                    <td>${removeBtn}</td>
+                </tr>`;
+        });
 
         tbody.innerHTML = html;
         totalCell.innerText = total.toFixed(2);
         attachEvents();
+
     } catch (err) {
         console.error("Error loading cart:", err);
     }
 }
 
-
-
 function attachEvents() {
-    if (isFrozen) {
-        // ❌ Freeze UI
-        document.querySelectorAll('.quantity-input').forEach(input => input.disabled = true);
-        document.querySelectorAll('.remove-item').forEach(btn => btn.remove());
-        return;
-    }
 
-    // Editable cart: normal events
-    document.querySelectorAll('.quantity-input').forEach(input => {
-        input.addEventListener('change', async function () {
-            const row = input.closest('tr');
-            const id = row.dataset.id;
-            const type = row.dataset.type;
-            const qty = parseInt(input.value);
-
-            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, { method: 'POST' });
-            if (!res.ok) return console.error('Failed to update quantity:', res.status);
-            const data = await res.json();
-            if (data.success) {
-                const price = parseFloat(row.querySelector('.unit-price').innerText);
-                row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
-                updateTotal();
-            }
-        });
-    });
+    if (isFrozen) return;
 
     document.querySelectorAll('.remove-item').forEach(btn => {
         btn.addEventListener('click', async function () {
@@ -219,10 +155,9 @@ function attachEvents() {
             const id = row.dataset.id;
             const type = row.dataset.type;
 
-            //const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
-           // const res = await fetch(removeItemUrl + `?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
             const res = await fetch(`${removeItemUrl}?productId=${id}&type=${encodeURIComponent(type)}`, { method: 'POST' });
-            if (!res.ok) return console.error('Failed to remove item:', res.status);
+            if (!res.ok) return;
+
             const data = await res.json();
             if (data.success) {
                 row.remove();
@@ -231,100 +166,28 @@ function attachEvents() {
         });
     });
 
-    // Handle up/down buttons for quantity
-document.querySelectorAll('.qty-btn').forEach(btn => {
-    btn.addEventListener('click', async function () {
-        const action = btn.dataset.action;
-        const id = btn.dataset.id;
-        const type = btn.dataset.type;
+    document.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            const type = btn.dataset.type;
 
-        const row = btn.closest('tr');
-        const input = row.querySelector('.quantity-input');
-        let qty = parseInt(input.value);
+            const row = btn.closest('tr');
+            const input = row.querySelector('.quantity-input');
+            let qty = parseInt(input.value);
 
-        if (action === "inc") qty++;
-        if (action === "dec" && qty > 1) qty--;
+            if (action === "inc") qty++;
+            if (action === "dec" && qty > 1) qty--;
 
-        input.value = qty;
+            input.value = qty;
 
-        // Update UI totals
-        const price = parseFloat(row.querySelector('.unit-price').innerText);
-        row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
-        updateTotal();
+            const price = parseFloat(row.querySelector('.unit-price').innerText);
+            row.querySelector('.line-total').innerText = (price * qty).toFixed(2);
+            updateTotal();
 
-        // Update server
-        try {
-            const res = await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, { method: 'POST' });
-            if (!res.ok) console.error("Failed to update quantity:", res.status);
-        } catch (err) {
-            console.error("Error updating quantity:", err);
-        }
+            await fetch(`${updateQtyUrl}?productId=${id}&quantity=${qty}&type=${encodeURIComponent(type)}`, { method: 'POST' });
+        });
     });
-});
-
-}
-
-async function tryRestoreLocalCartIfNeeded() {
-    try {
-        // ✅ Always load server cart first
-        const serverRes = await fetch(getCartUrl);
-        let serverJson = { items: [] };
-        console.log("🔍 Raw server response:", serverJson);
-
-        try {
-            serverJson = await serverRes.json();
-        } catch (e) {
-            console.warn("GetCartItems did not return JSON:", e);
-        }
-
-        const serverItems = serverJson?.items || [];
-        const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-        // ✅ If DB already has items, ignore local storage and load DB cart
-        if (serverItems.length > 0) {
-            console.log("✅ Server cart has priority — loading DB cart");
-            localStorage.removeItem("cart"); // clear old local storage
-            await loadCart(); // just show DB data
-            return;
-        }
-
-        // ✅ If DB is empty but local has items, push them to DB
-        if (localCart.length > 0) {
-            console.log("🚀 Pushing local cart to DB:", localCart);
-
-            const payload = localCart.map(i => ({
-                id: i.id.toString(),
-                name: i.name,
-                type: i.type,
-                price: i.price,
-                quantity: i.quantity
-            }));
-
-            const postRes = await fetch(saveCheckoutUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-                credentials: "same-origin"
-            });
-
-            if (postRes.ok) {
-                console.log("✅ Local cart synced to DB");
-                localStorage.removeItem("cart");
-                await loadCart();
-            } else {
-                console.error("❌ Failed to sync cart:", await postRes.text());
-                await loadCart();
-            }
-        } else {
-            // ✅ Both empty, just load UI
-            console.log("🟡 Both server and local are empty");
-            await loadCart();
-        }
-
-    } catch (err) {
-        console.error("❌ Error during cart restore attempt:", err);
-        await loadCart();
-    }
 }
 
 function updateTotal() {
@@ -335,39 +198,31 @@ function updateTotal() {
     document.getElementById('checkout-cart-total').innerText = total.toFixed(2);
 }
 
-
 document.addEventListener("DOMContentLoaded", async () => {
     await checkFrozenStatus();
-    await tryRestoreLocalCartIfNeeded(); // ✅ That's it. Do NOT restore again manually.
+    await loadCart();
 });
-
 </script>
 }
 
-
 <style>
-    /* Disable input styling fully when frozen */
-    input[disabled] {
-        background-color: #f5f5f5;
-        color: #555;
-        cursor: not-allowed;
-        border: none;
-        box-shadow: none;
-        pointer-events: none;
-    }
-
-    /* Remove arrow buttons in number input */
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    input[type=number] {
-        -moz-appearance: textfield; /* Firefox */
-    }
-
-    /* Remove delete icon column space */
-    td:empty {
-        display: none;
-    }
+input[disabled] {
+    background-color: #f5f5f5;
+    color: #555;
+    cursor: not-allowed;
+    border: none;
+    box-shadow: none;
+    pointer-events: none;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+td:empty {
+    display: none;
+}
 </style>

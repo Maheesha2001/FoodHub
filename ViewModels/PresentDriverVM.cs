@@ -8,5 +8,7 @@ namespace FoodHub.ViewModels
         public string Name { get; set; }
         public string NIC { get; set; }
         public DateTime? CheckInTime { get; set; }
+        public DateTime? CheckOutTime { get; set; }
+        public DateTime? Date { get; set; }
     }
 }
