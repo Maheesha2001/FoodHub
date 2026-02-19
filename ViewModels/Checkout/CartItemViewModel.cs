@@ -20,5 +20,6 @@ namespace FoodHub.ViewModels.Checkout
         public int Quantity { get; set; }
 
         public string? Code { get; set; }  
+        
     }
 }

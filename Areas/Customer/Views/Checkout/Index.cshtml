@@ -38,10 +38,10 @@
         </tfoot>
     </table>
 
-    <div class="d-flex justify-content-between mt-4">
+    <div class="d-flex mt-4">
     <!-- Continue Shopping Button -->
-        <a class="btn btn-secondary" href="/Customer/Menu">
-            Continue Shopping
+        <a class="btn btn-secondary" href="/Pizzas">
+            <b>Prev: </b>Continue Shopping
         </a>
 
         <!-- Delivery Information Button -->
@@ -49,13 +49,13 @@
         {
             <a class="btn btn-primary"
             href="@Url.Action("DeliveryInfo", "Checkout", new { area = "Customer", code = cartCode })">
-                Delivery Information
+                <b>Next: </b>Delivery Information
             </a>
         }
         else
         {
             <button class="btn btn-primary disabled">
-                Delivery Information
+                 <b>Next: </b>Delivery Information
             </button>
         }
     </div>

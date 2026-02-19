@@ -310,7 +310,7 @@ function attachCheckoutListener() {
             }
         } catch (err) {
             console.error("Error during checkout:", err);
-            alert("Error during checkout. Check the console.");
+            alert("Error during checkout. Login First.");
         }
     });
 }
