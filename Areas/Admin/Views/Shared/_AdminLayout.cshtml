@@ -100,11 +100,13 @@
             </div>
         </div>
     </nav>
-    <div class="content">
+      <main role="main" class="pb-3" style="padding-bottom: 0 !important;">
+       <div class="content">
         @RenderBody()
-    </div>
+        </div>
+    </main>
 
-    <footer class="bg-dark text-light text-center py-3">
+    <footer class="custom-footer">
         <p class="mb-0">&copy; @DateTime.Now.Year - Admin Panel</p>
     </footer>
 
