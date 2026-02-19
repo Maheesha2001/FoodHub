@@ -68,6 +68,31 @@ namespace FoodHub.Areas.Customer.Controllers
             return View(vm);
         }
 
+        [HttpGet("/Customer/Checkout/ViewOrderItems/{code}")]
+        public IActionResult ViewOrderItems(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return RedirectToAction("Index", new { area = "Customer" });
+
+            // Fetch items directly from OrderItem table using Code
+            var orderItems = _db.OrderItems
+                .Where(o => o.Code == code)  // use Code instead of OrderCode FK
+                .Select(i => new CartItemViewModel
+                {
+                    Id = i.ProductId.ToString(),
+                    Name = i.ProductName,
+                    Type = i.ProductType,
+                    Quantity = i.Quantity,
+                    Price = i.UnitPrice,
+                    Code = i.Code
+                }).ToList();
+
+            if (!orderItems.Any())
+                TempData["Message"] = "No items found for this order.";
+
+            return View("Index", orderItems);
+        }
+
         // ✅ Check if cart is frozen (Delivery flow)
         [HttpGet]
         public IActionResult IsCartFrozen()
@@ -174,6 +199,17 @@ namespace FoodHub.Areas.Customer.Controllers
             };
             Console.WriteLine($"✅ Passing OrderCode to view: {model.OrderCode}");
 
+            var orderItems = _db.OrderItems
+        .Where(i => i.Code == order.Code)
+        .ToList();
+
+    model.Items = orderItems.Select(i => new CartItemViewModel
+    {
+        Name = i.ProductName,
+        Quantity = i.Quantity,
+        Price = i.UnitPrice
+    }).ToList();
+
             return View(model);
         }
 
@@ -187,7 +223,7 @@ namespace FoodHub.Areas.Customer.Controllers
             // Find the pending order by Code instead of Id
             // var pendingOrder = _db.Orders.FirstOrDefault(o => o.UserId == userId && o.Status == "Pending" && o.Code == orderCode);
             var pendingOrder = _db.Orders.FirstOrDefault(o =>
-     o.UserId == userId && o.Status == "Pending" && o.Code == model.OrderCode);
+            o.UserId == userId && o.Status == "Pending" && o.Code == model.OrderCode);
             if (pendingOrder == null)
 
                 return RedirectToAction("Cart");

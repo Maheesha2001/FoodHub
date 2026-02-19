@@ -42,18 +42,51 @@
         <label asp-for="DeliveryNotes">Notes (optional)</label>
         <textarea name="DeliveryNotes" class="form-control"></textarea>
     </div>
-        @if (!string.IsNullOrEmpty(cartCode))
+        <!-- @if (!string.IsNullOrEmpty(cartCode))
         {
-            <button type="button" class="btn btn-secondary" 
-                onclick="window.location.href='@Url.Action("Index", "Checkout", new { area = "Customer", code = cartCode })'">
+           <button type="button" class="btn btn-secondary"
+                onclick="window.location.href='@Url.Action("ViewOrderItems", "Checkout", new { area = "Customer", code = cartCode })'">
                 <b>Prev: </b>Checkout
             </button>
+   
         } else{
             <button type="button" class="btn btn-secondary" disabled>
                 <b>Prev: </b>Checkout
             </button>
-        }
+        } -->
     <button type="submit" class="btn btn-primary"><b>Next: </b>Payment</button>
+
+    <hr />
+    <h4>Order Summary</h4>
+
+    @if (Model.Items != null && Model.Items.Any())
+{
+   
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.Price</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+    else
+    {
+        <p>No items found for this order.</p>
+    }
+
 </form>
 
 </div>

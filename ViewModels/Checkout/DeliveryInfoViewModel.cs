@@ -1,3 +1,4 @@
+using FoodHub.Models;
 namespace FoodHub.ViewModels.Checkout
 {
     public class DeliveryInfoViewModel
@@ -10,5 +11,7 @@ namespace FoodHub.ViewModels.Checkout
         public string? DeliveryNotes { get; set; }
 
         public string OrderCode { get; set; }   // add this
+
+          public List<CartItemViewModel> Items { get; set; } = new();
     }
 }
